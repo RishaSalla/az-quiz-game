@@ -6,7 +6,8 @@ import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
+    {/* أضفنا basename ليحترم اسم المستودع ولا يخرج منه */}
+    <BrowserRouter basename="/az-quiz-game">
       <App />
     </BrowserRouter>
   </React.StrictMode>,
