@@ -1,45 +1,24 @@
-import { ACCESS_DATA } from '../data/hashedCodes.js';
+// الهاش الخاص بكلمة المرور "00000000"
+const VALID_HASHES = [
+  "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+];
 
-/**
- * دالة مساعدة لتوليد بصمة SHA-256 للنص
- * تعتمد على Web Crypto API المدمجة في المتصفح للأمان والسرعة
- */
+// دالة التشفير (SHA-256)
 async function sha256(message) {
-  // تحويل النص إلى بيانات ثنائية
   const msgBuffer = new TextEncoder().encode(message);
-  
-  // التشفير
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  
-  // تحويل النتيجة إلى مصفوفة بايتات
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  
-  // تحويل البايتات إلى نص سداسي عشري (Hex String)
   const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  
   return hashHex;
 }
 
-/**
- * الدالة الرئيسية للتحقق من الكود
- * @param {string} inputCode - الكود الذي أدخله المستخدم
- * @returns {Promise<boolean>} - صح إذا كان الكود مقبولاً
- */
-export const verifyCode = async (inputCode) => {
-  if (!inputCode) return false;
-
-  // تنظيف المدخلات (إزالة المسافات الزائدة)
-  const cleanCode = inputCode.trim();
-
+// دالة التحقق التي تستدعيها صفحة الدخول
+export const verifyCode = async (code) => {
   try {
-    // تشفير المدخل
-    const hashedInput = await sha256(cleanCode);
-    
-    // البحث في القائمة المسموحة
-    // نستخدم includes للبحث عن البصمة
-    return ACCESS_DATA.valid_hashes.includes(hashedInput);
+    const hash = await sha256(code);
+    return VALID_HASHES.includes(hash);
   } catch (error) {
-    console.error("Encryption Error:", error);
+    console.error("خطأ في التحقق:", error);
     return false;
   }
 };
