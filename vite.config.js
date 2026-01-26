@@ -4,8 +4,9 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/az-quiz-game/', // 👈 هذا السطر هو الأهم لكي تعمل على GitHub Pages
   server: {
-    host: true, // يتيح الوصول عبر الشبكة المحلية للاختبار
-    port: 5173  // المنفذ الافتراضي
+    host: true,
+    port: 5173
   }
 })
