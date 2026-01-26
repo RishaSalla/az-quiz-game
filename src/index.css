@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* استدعاء خط تجوال للأمان (تم استدعاؤه في HTML أيضاً) */
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+
+@layer base {
+  body {
+    @apply font-sans text-gray-900 bg-app-bg overflow-x-hidden;
+    /* تحسين الخطوط في المتصفحات */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  /* الشكل السداسي الهندسي 
+    هذا الكود هو الذي يقص المربع ليصبح سداسياً
+  */
+  .clip-hexagon {
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+  
+  /* تأثير الزجاج الخلفي */
+  .glass-panel {
+    @apply bg-glass-white/80 backdrop-blur-lg border border-glass-border shadow-glass;
+  }
+}
+
+/* تخصيص شريط التمرير (Scrollbar) ليناسب التصميم */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
