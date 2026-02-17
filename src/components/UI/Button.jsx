@@ -1,41 +1,48 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
 const Button = ({ 
   children, 
   onClick, 
-  variant = 'primary', // primary, secondary, glass, danger
-  className = '', 
-  disabled = false,
-  type = 'button'
+  type = 'button', 
+  variant = 'primary', // 'primary', 'secondary', 'danger', 'white'
+  disabled = false, 
+  className = '',
+  icon = null // يمكن تمرير SVG كـ icon
 }) => {
   
-  // أنماط التصميم المختلفة
+  // تعريف الأنماط بناءً على النوع (Variant) مستوحاة من ألوان ريشة
   const variants = {
-    primary: "bg-gradient-to-r from-team-blue to-blue-600 text-white shadow-blue-900/20",
-    secondary: "bg-white text-gray-800 border-2 border-gray-200 hover:border-gray-300",
-    glass: "bg-white/20 backdrop-blur-md border border-white/40 text-white hover:bg-white/30",
-    danger: "bg-team-red text-white shadow-red-900/20",
-    outline: "border-2 border-white text-white hover:bg-white/10"
+    primary: 'pixel-button-orange text-white',
+    secondary: 'bg-[#4a7c59] text-white border-4 border-b-8 border-r-8 border-[#3d2b1f] hover:bg-[#3d6347]',
+    danger: 'bg-red-600 text-white border-4 border-b-8 border-r-8 border-[#3d2b1f] hover:bg-red-700',
+    white: 'pixel-button-white text-[#3d2b1f]'
   };
 
+  const baseStyles = 'relative flex items-center justify-center gap-2 px-6 py-2 font-bold transition-all duration-100 select-none';
+  const disabledStyles = 'opacity-50 cursor-not-allowed transform-none border-b-4 border-r-4';
+  const activeStyles = 'active:border-b-4 active:border-r-4 active:translate-y-1 active:translate-x-1';
+
   return (
-    <motion.button
+    <button
       type={type}
-      onClick={onClick}
+      onClick={!disabled ? onClick : undefined}
       disabled={disabled}
-      whileHover={{ scale: disabled ? 1 : 1.02 }}
-      whileTap={{ scale: disabled ? 1 : 0.95 }}
       className={`
-        relative px-8 py-3 rounded-2xl font-bold text-lg shadow-lg
-        transition-all duration-200 flex items-center justify-center gap-2
-        disabled:opacity-50 disabled:cursor-not-allowed
-        ${variants[variant] || variants.primary}
+        ${baseStyles} 
+        ${variants[variant]} 
+        ${disabled ? disabledStyles : activeStyles}
         ${className}
       `}
     >
-      {children}
-    </motion.button>
+      {/* عرض الأيقونة اليدوية (SVG) إذا وجدت */}
+      {icon && (
+        <span className="w-5 h-5 flex items-center justify-center">
+          {icon}
+        </span>
+      )}
+      
+      <span>{children}</span>
+    </button>
   );
 };
 
