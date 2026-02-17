@@ -2,41 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* لوحة ألوان ريشة المستوحاة من الشعار */
+  --risha-orange: #d36a3e;      /* البرتقالي من كلمة Risha */
+  --risha-sand: #f5eedc;        /* لون الرمل (الخلفية) */
+  --risha-dark: #3d2b1f;        /* البني الداكن للحدود والنصوص */
+  --risha-orange-light: #e6916b;
+  --risha-teal: #4a7c59;        /* لون متباين للفريق الثاني */
+}
 
 @layer base {
+  html, body {
+    @apply h-full overflow-hidden; /* منع التمرير نهائياً في كامل التطبيق */
+  }
+
   body {
-    @apply font-sans text-gray-900 bg-app-bg overflow-x-hidden;
-    /* تحسين الخطوط في المتصفحات */
+    background-color: var(--risha-sand);
+    color: var(--risha-dark);
+    font-family: 'Tajawal', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-image: url("https://www.transparenttextures.com/patterns/sandpaper.png"); /* ملمس رملي خفيف */
+  }
+}
+
+@layer components {
+  /* نمط البيكسل والحدود الصلبة */
+  .pixel-card {
+    @apply bg-white border-4 border-b-8 border-r-8 transition-all duration-200;
+    border-color: var(--risha-dark);
+  }
+
+  .pixel-button-orange {
+    background-color: var(--risha-orange);
+    color: white;
+    @apply border-4 border-b-8 border-r-8 active:border-b-4 active:border-r-4 active:translate-y-1 active:translate-x-1;
+    border-color: var(--risha-dark);
+  }
+
+  .pixel-button-white {
+    @apply bg-white border-4 border-b-8 border-r-8 active:border-b-4 active:border-r-4 active:translate-y-1 active:translate-x-1;
+    border-color: var(--risha-dark);
   }
 }
 
 @layer utilities {
-  /* الشكل السداسي الهندسي 
-    هذا الكود هو الذي يقص المربع ليصبح سداسياً
-  */
+  /* الشكل السداسي الهندسي */
   .clip-hexagon {
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   }
-  
-  /* تأثير الزجاج الخلفي */
-  .glass-panel {
-    @apply bg-glass-white/80 backdrop-blur-lg border border-glass-border shadow-glass;
+
+  /* حل مشكلة الجوال: احتواء الهرم داخل الشاشة تلقائياً */
+  .game-container-responsive {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100vw;
+    padding: 1rem;
+    /* تصغير المحتوى إذا كان الارتفاع غير كافٍ */
+    transform-origin: center center;
+  }
+
+  @media (max-height: 800px) {
+    .pyramid-scale {
+      transform: scale(0.85);
+    }
+  }
+
+  @media (max-height: 700px) {
+    .pyramid-scale {
+      transform: scale(0.75);
+    }
+  }
+
+  @media (max-width: 450px) {
+    .pyramid-scale {
+      transform: scale(0.65);
+    }
+  }
+
+  /* تأثير الخلية السداسية عند الاختيار */
+  .hex-active {
+    filter: drop-shadow(0 0 15px var(--risha-orange));
+    z-index: 30;
   }
 }
 
-/* تخصيص شريط التمرير (Scrollbar) ليناسب التصميم */
+/* تخصيص شريط التمرير (للحالات الاستثنائية) */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--risha-sand);
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--risha-dark);
+  border-radius: 10px;
 }
