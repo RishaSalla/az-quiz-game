@@ -1,41 +1,27 @@
 import React from 'react';
-import HexCell from './HexCell';
 import { useGameStore } from '../../store/useGameStore';
+import HexCell from './HexCell';
 
 const PyramidGrid = ({ onCellClick }) => {
-  const { grid, currentPlayerIndex, gameStatus } = useGameStore();
-
-  // دالة مساعدة لتجميع الخلايا حسب الصفوف لرسم الهرم
-  const getRows = () => {
-    const rows = {};
-    grid.forEach(cell => {
-      if (!rows[cell.row]) rows[cell.row] = [];
-      rows[cell.row].push(cell);
-    });
-    return Object.values(rows);
-  };
-
-  const rows = getRows();
+  const grid = useGameStore((state) => state.grid);
 
   return (
-    <div className="flex flex-col items-center justify-center gap-1 md:gap-2 py-8 select-none">
-      {rows.map((rowCells, rowIndex) => (
+    <div className="relative flex flex-col items-center select-none">
+      {/* رسم الهرم بناءً على الصفوف */}
+      {[...Array(7)].map((_, rowIndex) => (
         <div 
           key={rowIndex} 
-          className="flex items-center justify-center"
-          // إضافة هامش سلبي بسيط لتقليل الفراغات بين الصفوف السداسية
-          style={{ marginBottom: '-10px' }}
+          className="flex justify-center -mt-3 md:-mt-4" // تداخل الخلايا لتشكيل النمط السداسي
         >
-          {rowCells.map((cell) => (
-            <HexCell
-              key={cell.id}
-              cell={cell}
-              onClick={() => onCellClick(cell)}
-              disabled={gameStatus !== 'playing'}
-              // لاحقاً يمكننا تمرير isWinningPath إذا أردنا تلوين مسار الفوز
-              isWinningPath={false} 
-            />
-          ))}
+          {grid
+            .filter((cell) => cell.row === rowIndex)
+            .map((cell) => (
+              <HexCell
+                key={cell.id}
+                cell={cell}
+                onClick={() => onCellClick(cell)}
+              />
+            ))}
         </div>
       ))}
     </div>
