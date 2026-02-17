@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Users, Clock, Play, User } from 'lucide-react';
-import Button from '../components/UI/Button';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../store/useGameStore';
 
 const PlayerSetup = () => {
@@ -11,91 +9,147 @@ const PlayerSetup = () => {
 
   const [p1Name, setP1Name] = useState('');
   const [p2Name, setP2Name] = useState('');
-  const [enableTimer, setEnableTimer] = useState(false);
+  const [p1Members, setP1Members] = useState(''); // لأعضاء الفريق 1
+  const [p2Members, setP2Members] = useState(''); // لأعضاء الفريق 2
+  const [gameMode, setGameMode] = useState('individual'); // 'individual' or 'team'
+  const [timerValue, setTimerValue] = useState(30); // 0, 20, 40, 60
 
   const handleStart = (e) => {
     e.preventDefault();
-    // استخدام الأسماء المدخلة أو أسماء افتراضية
-    startGame(
-      p1Name.trim() || 'الفريق الأحمر',
-      p2Name.trim() || 'الفريق الأزرق',
-      enableTimer
-    );
+    
+    const player1Data = {
+      name: p1Name.trim() || (gameMode === 'team' ? 'الفريق البرتقالي' : 'المتحدي 1'),
+      members: p1Members.split(',').map(m => m.trim()).filter(m => m !== '')
+    };
+    
+    const player2Data = {
+      name: p2Name.trim() || (gameMode === 'team' ? 'الفريق الأخضر' : 'المتحدي 2'),
+      members: p2Members.split(',').map(m => m.trim()).filter(m => m !== '')
+    };
+
+    startGame(player1Data, player2Data, gameMode, timerValue);
     navigate('/game');
   };
 
+  // رموز SVG يدوية
+  const RishaLogoSVG = () => (
+    <svg width="100" height="50" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="120" height="40" y="20" fill="#d36a3e" />
+      <text x="50%" y="45" textAnchor="middle" fill="#3d2b1f" style={{ font: 'bold 24px Arial', letterSpacing: '2px' }}>RISHA</text>
+    </svg>
+  );
+
+  const UserSVG = () => (
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+    </svg>
+  );
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
+    <div className="min-h-screen flex items-center justify-center p-4 relative z-10 py-10">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-4xl bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/50 flex flex-col md:flex-row"
+        className="w-full max-w-5xl pixel-card flex flex-col md:flex-row overflow-hidden"
       >
-        {/* قسم اللاعب 1 (الأحمر) */}
-        <div className="flex-1 p-8 bg-red-50/50 flex flex-col items-center justify-center border-b md:border-b-0 md:border-l border-gray-100">
-          <div className="w-20 h-20 rounded-full bg-team-red text-white flex items-center justify-center mb-6 shadow-lg shadow-red-200">
-            <User size={40} />
+        {/* قسم اللاعب/الفريق 1 (البرتقالي) */}
+        <div className="flex-1 p-8 bg-[#d36a3e]/10 flex flex-col items-center border-b md:border-b-0 md:border-l-4 border-[#3d2b1f]">
+          <div className="w-20 h-20 bg-[#d36a3e] border-4 border-[#3d2b1f] text-white flex items-center justify-center mb-6 shadow-[4px_4px_0px_#3d2b1f]">
+            <UserSVG />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">الفريق الأحمر</h2>
+          <h2 className="text-xl font-bold text-[#3d2b1f] mb-4">الطرف الأول</h2>
           <input
             type="text"
             value={p1Name}
             onChange={(e) => setP1Name(e.target.value)}
-            placeholder="اسم اللاعب أو الفريق"
-            className="w-full px-4 py-3 rounded-xl border-2 border-red-100 focus:border-team-red focus:bg-white bg-white/50 text-center outline-none transition-all placeholder-red-200"
+            placeholder={gameMode === 'team' ? "اسم الفريق البرتقالي" : "اسم المتحدي"}
+            className="w-full px-4 py-3 border-4 border-[#3d2b1f] bg-white outline-none focus:bg-[#f5eedc] text-center mb-4"
           />
+          {gameMode === 'team' && (
+            <textarea
+              placeholder="أسماء الأعضاء (افصل بينهم بفاصلة)"
+              value={p1Members}
+              onChange={(e) => setP1Members(e.target.value)}
+              className="w-full px-4 py-2 border-4 border-[#3d2b1f] bg-white outline-none h-24 text-sm"
+            />
+          )}
         </div>
 
-        {/* قسم الإعدادات الوسطي */}
-        <div className="flex-1 p-8 flex flex-col justify-between relative z-20">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2 font-sans">تجهيز المعركة</h1>
-            <p className="text-gray-500 text-sm">أدخل أسماء المتنافسين للبدء</p>
-          </div>
+        {/* القسم الأوسط للإعدادات */}
+        <div className="flex-[1.2] p-8 flex flex-col items-center bg-white relative">
+          <div className="mb-6"><RishaLogoSVG /></div>
+          <h1 className="text-2xl font-bold text-[#3d2b1f] mb-8">إعداد التحدي</h1>
 
-          <form onSubmit={handleStart} className="space-y-8">
-            {/* خيار المؤقت */}
-            <div 
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between
-                ${enableTimer ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
-              onClick={() => setEnableTimer(!enableTimer)}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${enableTimer ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
-                  <Clock size={20} />
-                </div>
-                <div className="text-right">
-                  <span className="block font-bold text-gray-700">مؤقت التفكير</span>
-                  <span className="text-xs text-gray-500">30 ثانية لكل إجابة</span>
-                </div>
-              </div>
-              
-              {/* مفتاح التبديل بصري */}
-              <div className={`w-12 h-6 rounded-full p-1 transition-colors ${enableTimer ? 'bg-blue-500' : 'bg-gray-300'}`}>
-                <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${enableTimer ? '-translate-x-6' : 'translate-x-0'}`} />
+          <div className="w-full space-y-6">
+            {/* اختيار نمط اللعب */}
+            <div className="flex gap-2 p-1 border-4 border-[#3d2b1f] bg-[#f5eedc]">
+              <button
+                onClick={() => setGameMode('individual')}
+                className={`flex-1 py-2 font-bold transition-all ${gameMode === 'individual' ? 'bg-[#d36a3e] text-white' : 'text-[#3d2b1f]'}`}
+              >
+                شخص ضد شخص
+              </button>
+              <button
+                onClick={() => setGameMode('team')}
+                className={`flex-1 py-2 font-bold transition-all ${gameMode === 'team' ? 'bg-[#d36a3e] text-white' : 'text-[#3d2b1f]'}`}
+              >
+                فريق ضد فريق
+              </button>
+            </div>
+
+            {/* اختيار المؤقت */}
+            <div className="space-y-2">
+              <label className="block text-center font-bold text-[#3d2b1f] text-sm">مؤقت التفكير (بالثواني)</label>
+              <div className="grid grid-cols-4 gap-2">
+                {[0, 20, 40, 60].map((val) => (
+                  <button
+                    key={val}
+                    onClick={() => setTimerValue(val)}
+                    className={`py-2 border-4 border-[#3d2b1f] font-bold ${timerValue === val ? 'bg-[#3d2b1f] text-white' : 'bg-white text-[#3d2b1f]'}`}
+                  >
+                    {val === 0 ? 'بدون' : val}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <Button type="submit" variant="primary" className="w-full py-4 text-xl shadow-blue-500/25">
-              <Play size={24} fill="currentColor" />
-              ابدأ التحدي
-            </Button>
-          </form>
+            <button onClick={handleStart} className="pixel-button-orange w-full py-4 text-xl font-bold">
+              هيا نلعب
+            </button>
+            
+            {/* قسم التعليمات المختصرة */}
+            <div className="mt-8 p-4 border-2 border-dashed border-[#3d2b1f]/30 rounded-lg bg-[#f5eedc]/20">
+              <h3 className="font-bold text-[#3d2b1f] mb-2 text-sm text-center">كيف تفوز؟</h3>
+              <p className="text-xs text-[#3d2b1f]/70 leading-relaxed text-right">
+                • اختر رقماً من الهرم للإجابة على سؤال الحرف المخبأ خلفه.<br/>
+                • إذا أخطأت، سيتم تبديل الحرف بحرف آخر عشوائي لزيادة التحدي!<br/>
+                • الفائز هو من يربط أضلاع الهرم الثلاثة (اليمين واليسار والقاعدة) بلونه أولاً.
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* قسم اللاعب 2 (الأزرق) */}
-        <div className="flex-1 p-8 bg-blue-50/50 flex flex-col items-center justify-center border-t md:border-t-0 md:border-r border-gray-100">
-          <div className="w-20 h-20 rounded-full bg-team-blue text-white flex items-center justify-center mb-6 shadow-lg shadow-blue-200">
-            <User size={40} />
+        {/* قسم اللاعب/الفريق 2 (الأخضر) */}
+        <div className="flex-1 p-8 bg-[#4a7c59]/10 flex flex-col items-center border-t md:border-t-0 md:border-r-4 border-[#3d2b1f]">
+          <div className="w-20 h-20 bg-[#4a7c59] border-4 border-[#3d2b1f] text-white flex items-center justify-center mb-6 shadow-[4px_4px_0px_#3d2b1f]">
+            <UserSVG />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">الفريق الأزرق</h2>
+          <h2 className="text-xl font-bold text-[#3d2b1f] mb-4">الطرف الثاني</h2>
           <input
             type="text"
             value={p2Name}
             onChange={(e) => setP2Name(e.target.value)}
-            placeholder="اسم اللاعب أو الفريق"
-            className="w-full px-4 py-3 rounded-xl border-2 border-blue-100 focus:border-team-blue focus:bg-white bg-white/50 text-center outline-none transition-all placeholder-blue-200"
+            placeholder={gameMode === 'team' ? "اسم الفريق الأخضر" : "اسم المتحدي"}
+            className="w-full px-4 py-3 border-4 border-[#3d2b1f] bg-white outline-none focus:bg-[#f5eedc] text-center mb-4"
           />
+          {gameMode === 'team' && (
+            <textarea
+              placeholder="أسماء الأعضاء (افصل بينهم بفاصلة)"
+              value={p2Members}
+              onChange={(e) => setP2Members(e.target.value)}
+              className="w-full px-4 py-2 border-4 border-[#3d2b1f] bg-white outline-none h-24 text-sm"
+            />
+          )}
         </div>
       </motion.div>
     </div>
