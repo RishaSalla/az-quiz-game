@@ -8,8 +8,7 @@ import PlayerBadge from '../components/Player/PlayerBadge';
 import Modal from '../components/UI/Modal';
 import Button from '../components/UI/Button';
 import WinnerOverlay from '../components/Player/WinnerOverlay';
-import questionsData from '../data/questions.json';
-import { checkAnswerLogic } from '../logic/gameMechanics';
+import { checkAnswerLogic, ARABIC_LETTERS } from '../logic/gameMechanics';
 
 const GameArena = () => {
   const navigate = useNavigate();
@@ -23,22 +22,20 @@ const GameArena = () => {
     turnDuration
   } = useGameStore();
 
-  // الحالة المحلية لإدارة السؤال الحالي
   const [selectedCell, setSelectedCell] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [userAnswer, setUserAnswer] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(turnDuration);
-  const [feedback, setFeedback] = useState(null); // 'correct', 'wrong', null
+  const [feedback, setFeedback] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // التأكد من وجود لاعبين (حماية من التحديث المباشر للصفحة)
   useEffect(() => {
     if (!players || players.length === 0) {
       navigate('/setup');
     }
   }, [players, navigate]);
 
-  // إدارة المؤقت عند فتح السؤال
   useEffect(() => {
     let timer;
     if (isModalOpen && isTimerEnabled && timeLeft > 0 && !feedback) {
@@ -46,29 +43,53 @@ const GameArena = () => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     } else if (timeLeft === 0 && !feedback) {
-      handleSubmitAnswer(true); // انتهى الوقت = إجابة خاطئة
+      handleSubmitAnswer(true);
     }
     return () => clearInterval(timer);
   }, [isModalOpen, timeLeft, isTimerEnabled, feedback]);
 
-  // عند النقر على خلية
-  const handleCellClick = (cell) => {
-    // 1. البحث عن سؤال يبدأ بهذا الحرف
-    // ملاحظة: في التطبيق الحقيقي يفضل تصفية الأسئلة مسبقاً
-    const eligibleQuestions = questionsData.filter(q => q.letter === cell.letter);
-    const randomQuestion = eligibleQuestions.length > 0 
-      ? eligibleQuestions[Math.floor(Math.random() * eligibleQuestions.length)]
-      : { question: `سؤال افتراضي لحرف ${cell.letter}`, answer: "تجربة" }; // fallback
-
-    setSelectedCell(cell);
-    setCurrentQuestion(randomQuestion);
-    setUserAnswer('');
-    setFeedback(null);
-    setTimeLeft(turnDuration);
-    setIsModalOpen(true);
+  // دالة لجلب اسم الملف بناءً على الحرف
+  const getFileNameByLetter = (letter) => {
+    const index = ARABIC_LETTERS.indexOf(letter);
+    if (index === -1) return null;
+    
+    // قائمة بأسماء الملفات كما ظهرت في الصورة بالترتيب
+    const fileNames = [
+      "01alif", "02ba", "03ta", "04tha", "05jeem", "06haa", "07khaa",
+      "08dal", "09dhal", "10ra", "11zay", "12seen", "13sheen", "14sad",
+      "15dad", "16ta_a", "17zha", "18ain", "19ghain", "20fa", "21qaf",
+      "22kaf", "23lam", "24meem", "25noon", "26ha_a", "27waw", "28ya"
+    ];
+    
+    return fileNames[index];
   };
 
-  // تقديم الإجابة
+  const handleCellClick = async (cell) => {
+    setIsLoading(true);
+    const fileName = getFileNameByLetter(cell.letter);
+    
+    try {
+      // استدعاء ملف الـ JSON الخاص بالحرف ديناميكياً
+      const module = await import(`../data/letters/${fileName}.json`);
+      const questions = module.default;
+      
+      // اختيار سؤال عشوائي من المصفوفة
+      const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+
+      setSelectedCell(cell);
+      setCurrentQuestion(randomQuestion);
+      setUserAnswer('');
+      setFeedback(null);
+      setTimeLeft(turnDuration);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Error loading question file:", error);
+      alert("عذراً، تعذر تحميل الأسئلة لهذا الحرف.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmitAnswer = (isTimeout = false) => {
     if (!currentQuestion) return;
 
@@ -79,13 +100,13 @@ const GameArena = () => {
       setTimeout(() => {
         handleCorrectAnswer(selectedCell.id);
         closeModal();
-      }, 1000); // انتظار لرؤية رسالة "صحيح"
+      }, 1000);
     } else {
       setFeedback('wrong');
       setTimeout(() => {
         handleWrongAnswer();
         closeModal();
-      }, 1500); // انتظار لرؤية رسالة "خطأ"
+      }, 1500);
     }
   };
 
@@ -97,16 +118,13 @@ const GameArena = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative z-10 overflow-hidden pb-10">
-      {/* 1. الشريط العلوي: اللاعبين والنتيجة */}
       <header className="px-4 py-6 flex justify-between items-start md:px-20 max-w-6xl mx-auto w-full">
-        {/* اللاعب 2 (الأزرق) - يظهر يساراً */}
         <PlayerBadge 
           player={players[1]} 
           isActive={gameStatus === 'playing' && currentPlayerIndex === 1}
           isWinner={gameStatus === 'finished' && players[1].id === useGameStore.getState().winner?.id}
         />
 
-        {/* مؤشر الدور في المنتصف */}
         <div className="mt-4 flex flex-col items-center">
           <div className="text-gray-400 font-bold text-sm tracking-widest mb-2">VS</div>
           <div className={`w-3 h-3 rounded-full animate-pulse ${
@@ -114,7 +132,6 @@ const GameArena = () => {
           }`} />
         </div>
 
-        {/* اللاعب 1 (الأحمر) - يظهر يميناً */}
         <PlayerBadge 
           player={players[0]} 
           isActive={gameStatus === 'playing' && currentPlayerIndex === 0}
@@ -122,14 +139,12 @@ const GameArena = () => {
         />
       </header>
 
-      {/* 2. منطقة اللعب الوسطى (الهرم) */}
       <main className="flex-1 flex items-center justify-center p-4">
-        <div className="transform scale-90 md:scale-100 transition-transform">
+        <div className={isLoading ? "opacity-50 pointer-events-none" : ""}>
           <PyramidGrid onCellClick={handleCellClick} />
         </div>
       </main>
 
-      {/* 3. زر الخروج */}
       <div className="absolute top-4 left-4">
         <button 
           onClick={() => navigate('/')} 
@@ -139,20 +154,17 @@ const GameArena = () => {
         </button>
       </div>
 
-      {/* 4. نافذة السؤال */}
       <Modal 
         isOpen={isModalOpen} 
-        onClose={() => {}} // نمنع الإغلاق عند النقر خارج النافذة
+        onClose={() => {}} 
         showCloseButton={false}
         title={selectedCell ? `حرف (${selectedCell.letter})` : ''}
       >
         <div className="space-y-6 text-center">
-          {/* نص السؤال */}
           <h3 className="text-xl md:text-2xl font-bold text-gray-800 leading-relaxed">
             {currentQuestion?.question}
           </h3>
 
-          {/* المؤشر الزمني (إذا كان مفعلاً) */}
           {isTimerEnabled && !feedback && (
             <div className="flex items-center justify-center gap-2 text-orange-600 font-mono text-xl">
               <Clock size={20} />
@@ -160,14 +172,13 @@ const GameArena = () => {
             </div>
           )}
 
-          {/* حقل الإجابة */}
           <div className="relative">
             <input
               type="text"
               value={userAnswer}
               onChange={(e) => setUserAnswer(e.target.value)}
               placeholder="اكتب الإجابة هنا..."
-              disabled={!!feedback} // تعطيل الكتابة عند ظهور النتيجة
+              disabled={!!feedback}
               className={`w-full p-4 text-center text-lg border-2 rounded-xl outline-none transition-all
                 ${feedback === 'correct' ? 'border-green-500 bg-green-50 text-green-700' : ''}
                 ${feedback === 'wrong' ? 'border-red-500 bg-red-50 text-red-700' : ''}
@@ -176,38 +187,23 @@ const GameArena = () => {
               onKeyDown={(e) => e.key === 'Enter' && !feedback && handleSubmitAnswer()}
               autoFocus
             />
-            
-            {/* رسائل التغذية الراجعة */}
-            {feedback === 'correct' && (
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute right-4 top-4 text-green-600">
-                ✅
-              </motion.div>
-            )}
-            {feedback === 'wrong' && (
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute right-4 top-4 text-red-600">
-                ❌
-              </motion.div>
-            )}
           </div>
 
-          {/* زر التأكيد */}
           {!feedback && (
             <Button onClick={() => handleSubmitAnswer()} className="w-full">
               تأكيد الإجابة
             </Button>
           )}
 
-          {/* رسالة الخطأ النصية */}
           {feedback === 'wrong' && (
             <p className="text-red-500 text-sm flex items-center justify-center gap-1">
               <AlertCircle size={16} />
-              إجابة خاطئة! الإجابة الصحيحة تبدأ بحرف {selectedCell.letter}
+              إجابة خاطئة!
             </p>
           )}
         </div>
       </Modal>
 
-      {/* 5. شاشة الفوز (تظهر تلقائياً) */}
       <WinnerOverlay />
     </div>
   );
