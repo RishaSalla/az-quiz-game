@@ -1,12 +1,12 @@
 import React from 'react';
-// التصحيح: استدعاء المخزن بدون أقواس لأنه "Default Export"
+// التصحيح: استدعاء المخزن كـ Default Export لإصلاح خطأ البناء
 import useGameStore from '../../store/useGameStore';
 import HexCell from './HexCell';
 
 const PyramidGrid = ({ onCellClick }) => {
   const { cells } = useGameStore();
 
-  // قائمة الحروف العربية الـ 28 لبناء الهرم
+  // قائمة الحروف العربية الـ 28 المعتمدة
   const letters = [
     { id: 1, label: 'أ' }, { id: 2, label: 'ب' }, { id: 3, label: 'ت' }, { id: 4, label: 'ث' },
     { id: 5, label: 'ج' }, { id: 6, label: 'ح' }, { id: 7, label: 'خ' }, { id: 8, label: 'د' },
@@ -17,7 +17,7 @@ const PyramidGrid = ({ onCellClick }) => {
     { id: 25, label: 'ن' }, { id: 26, label: 'هـ' }, { id: 27, label: 'و' }, { id: 28, label: 'ي' }
   ];
 
-  // تقسيم الحروف إلى صفوف لبناء شكل الهرم (1, 2, 3, 4, 5, 6, 7)
+  // هندسة بناء الهرم: تقسيم الحروف إلى 7 صفوف (1, 2, 3, 4, 5, 6, 7)
   const rows = [];
   let currentIdx = 0;
   for (let i = 1; i <= 7; i++) {
@@ -26,14 +26,21 @@ const PyramidGrid = ({ onCellClick }) => {
   }
 
   return (
-    <div className="flex flex-col items-center gap-1 scale-90 sm:scale-100 origin-top select-none">
+    <div className="flex flex-col items-center select-none py-10">
       {rows.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex gap-1">
+        <div 
+          key={rowIndex} 
+          className="flex justify-center gap-1"
+          /* التعديل السحري: استخدام هامش علوي سالب (Negative Margin) 
+             لجعل الصفوف "تتداخل" عمودياً وتختفي الفراغات البيضاء
+          */
+          style={{ marginTop: rowIndex === 0 ? '0' : '-1.6rem' }}
+        >
           {row.map((letter) => (
             <HexCell
               key={letter.id}
               label={letter.label}
-              status={cells[letter.id]} // تحديد لون الخلية بناءً على الفريق المستولي عليها
+              status={cells[letter.id]} // ربط الحالة بلون الفريق المستولي
               onClick={() => onCellClick(letter)}
             />
           ))}
