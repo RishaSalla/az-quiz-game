@@ -7,7 +7,7 @@ import GameArena from './pages/GameArena';
 function App() {
   return (
     <Router basename="/az-quiz-game">
-      {/* خلفية نظيفة بلون الرمل مع تأثير الورق فقط */}
+      {/* خلفية نظيفة بلون الرمل مع تأثير الورق (Sandpaper) فقط وبدون رسومات مشوهة */}
       <div className="min-h-screen w-full relative overflow-hidden bg-[#f5eedc]">
         <Routes>
           <Route path="/" element={<AccessLogin />} />
