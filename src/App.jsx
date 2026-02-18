@@ -6,8 +6,8 @@ import GameArena from './pages/GameArena';
 
 function App() {
   return (
-    <Router>
-      {/* الحاوية الرئيسية التي تضمن تطبيق الهوية البصرية ومنع التمرير */}
+    /* 👈 التعديل هنا: أضفنا basename ليطابق مسار مشروعك في GitHub */
+    <Router basename="/az-quiz-game">
       <div className="min-h-screen w-full relative overflow-hidden bg-[#f5eedc]">
         
         {/* تأثير زخرفي خفيف في الخلفية (ريشة بكسل كبيرة باهتة) */}
@@ -19,16 +19,9 @@ function App() {
         </div>
 
         <Routes>
-          {/* 1. صفحة الدخول بكود الوصول */}
           <Route path="/" element={<AccessLogin />} />
-
-          {/* 2. صفحة إعداد اللاعبين والفرق والمؤقت */}
           <Route path="/setup" element={<PlayerSetup />} />
-
-          {/* 3. ساحة اللعب (الهرم الرقمي) */}
           <Route path="/game" element={<GameArena />} />
-
-          {/* إعادة التوجيه في حال كتابة مسار خاطئ */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
