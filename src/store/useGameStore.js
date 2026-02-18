@@ -5,24 +5,24 @@ const useGameStore = create((set) => ({
   teamA: { name: 'الفريق البرتقالي', players: [] },
   teamB: { name: 'الفريق البني', players: [] },
   
-  // مؤشرات "الميكروفون الدوار" (أي لاعب عليه الدور الآن داخل الفريق)
+  // نمط اللعب: 'single' (لاعب ضد لاعب) أو 'team' (فريق ضد فريق)
+  gameMode: 'single',
+  
+  // مؤشرات "الميكروفون الدوار" لكل فريق
   teamAPlayerIndex: 0,
   teamBPlayerIndex: 0,
   
-  // الفريق الذي عليه الدور حالياً (teamA أو teamB)
   currentTeam: 'teamA',
-  
-  // حالة خلايا الهرم (رقم الخلية: الفريق المستولي عليها)
-  cells: {},
-  
-  // حالة اللعبة (setup, playing, winner)
-  status: 'setup',
+  cells: {}, // حالة خلايا الهرم
+  status: 'setup', // setup, playing, winner
   winner: null,
 
-  // ضبط إعدادات اللعبة وبدء اللعب
+  // إعداد اللعبة وتحديد النمط تلقائياً
   setGameSetup: (data) => set({
     teamA: data.teamA,
     teamB: data.teamB,
+    // إذا كان أي فريق لديه أكثر من لاعب، يتحول النمط لـ 'team'
+    gameMode: (data.teamA.players.length > 1 || data.teamB.players.length > 1) ? 'team' : 'single',
     teamAPlayerIndex: 0,
     teamBPlayerIndex: 0,
     status: 'playing',
@@ -31,14 +31,16 @@ const useGameStore = create((set) => ({
     currentTeam: 'teamA'
   }),
 
-  // منطق "الميكروفون الدوار" وتغيير الدور للفريق الآخر
+  // منطق تبديل الدور وتدوير الميكروفون
   nextTurn: () => set((state) => {
     const isTeamA = state.currentTeam === 'teamA';
     
-    // حساب الفهرس القادم للاعب (يعود للصفر إذا انتهت قائمة الأسماء)
-    const nextPlayerIndex = isTeamA 
-      ? (state.teamAPlayerIndex + 1) % (state.teamA.players.length || 1)
-      : (state.teamBPlayerIndex + 1) % (state.teamB.players.length || 1);
+    // إذا كان النمط جماعي، نقوم بتدوير اللاعب داخل الفريق
+    let nextPlayerIndex = isTeamA ? state.teamAPlayerIndex : state.teamBPlayerIndex;
+    if (state.gameMode === 'team') {
+      const playersList = isTeamA ? state.teamA.players : state.teamB.players;
+      nextPlayerIndex = (nextPlayerIndex + 1) % (playersList.length || 1);
+    }
 
     return {
       currentTeam: isTeamA ? 'teamB' : 'teamA',
@@ -47,29 +49,29 @@ const useGameStore = create((set) => ({
     };
   }),
 
-  // وظيفة "التخطي" - تمرر الدور دون الاستيلاء على أي خلية
-  skipTurn: () => {
-    // استدعاء منطق تبديل الدور والميكروفون مباشرة
-    set((state) => {
-      const isTeamA = state.currentTeam === 'teamA';
-      const nextIndex = isTeamA 
-        ? (state.teamAPlayerIndex + 1) % (state.teamA.players.length || 1)
-        : (state.teamBPlayerIndex + 1) % (state.teamB.players.length || 1);
+  // التخطي: ينقل الدور دون تغيير حالة الخلايا
+  skipTurn: () => set((state) => {
+    const isTeamA = state.currentTeam === 'teamA';
+    let nextIndex = isTeamA ? state.teamAPlayerIndex : state.teamBPlayerIndex;
+    
+    if (state.gameMode === 'team') {
+      const playersList = isTeamA ? state.teamA.players : state.teamB.players;
+      nextIndex = (nextIndex + 1) % (playersList.length || 1);
+    }
 
-      return {
-        currentTeam: isTeamA ? 'teamB' : 'teamA',
-        teamAPlayerIndex: isTeamA ? nextIndex : state.teamAPlayerIndex,
-        teamBPlayerIndex: !isTeamA ? nextIndex : state.teamBPlayerIndex,
-      };
-    });
-  },
+    return {
+      currentTeam: isTeamA ? 'teamB' : 'teamA',
+      teamAPlayerIndex: isTeamA ? nextIndex : state.teamAPlayerIndex,
+      teamBPlayerIndex: !isTeamA ? nextIndex : state.teamBPlayerIndex,
+    };
+  }),
 
-  // الاستيلاء على الخلية للفريق الحالي
+  // الاستيلاء على الخلية
   occupyCell: (cellId) => set((state) => ({
     cells: { ...state.cells, [cellId]: state.currentTeam }
   })),
 
-  // إعادة تصفير اللعبة بالكامل
+  // إعادة التعيين
   resetGame: () => set({
     cells: {},
     currentTeam: 'teamA',
