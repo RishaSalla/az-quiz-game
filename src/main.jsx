@@ -1,14 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import App from './App';
+import App from './App.jsx';
 import './index.css';
 
+// في React، يفضل ترك مهمة التوجيه لملف App.jsx 
+// لضمان عدم حدوث تداخل يسبب الصفحة البيضاء
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* أضفنا basename ليحترم اسم المستودع ولا يخرج منه */}
-    <BrowserRouter basename="/az-quiz-game">
-      <App />
-    </BrowserRouter>
+    <App />
   </React.StrictMode>,
 );
