@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import logo from '../assets/logo-risha.png'; // شعار ريشة المعتمد
+import logo from '../assets/logo.risha.png'; // شعار ريشة المعتمد
 
 const AccessLogin = () => {
   const [code, setCode] = useState('');
