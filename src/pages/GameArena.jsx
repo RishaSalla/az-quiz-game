@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useGameStore from '../store/useGameStore';
 import PyramidGrid from '../components/GameBoard/PyramidGrid';
-import logo from '../assets/logo-risha.png';
+// التصحيح: استخدام المسار والاسم الذي زودتني به بالضبط
+import logo from '../assets/logo.risha.png'; 
 
 const GameArena = () => {
   const { 
@@ -14,29 +15,24 @@ const GameArena = () => {
   const [showAnswer, setShowAnswer] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(null);
 
-  // منطق اختيار اللاعب صاحب الميكروفون حالياً
   const currentPlayer = currentTeam === 'teamA' 
     ? teamA.players[teamAPlayerIndex] 
     : teamB.players[teamBPlayerIndex];
 
-  // مصفوفة لربط الأرقام بأسماء الملفات كما تظهر في مستودعك
   const letterMapping = [
     "alif", "baa", "taa", "thaa", "jeem", "haa", "khaa", "daal", "thaal", "raa", "zaay", 
     "seen", "sheen", "saad", "daad", "taa_v2", "zaa", "ayn", "ghayn", "faa", "qaaf", 
     "kaaf", "laam", "meem", "noon", "haa_v2", "waaw", "yaa"
   ];
 
-  // جلب السؤال فور الضغط على الخلية
   useEffect(() => {
     if (selectedCell) {
       const fileNumber = selectedCell.id.toString().padStart(2, '0');
       const fileName = letterMapping[selectedCell.id - 1];
       
-      // استدعاء ملف الـ JSON الخاص بالحرف
       fetch(`/src/data/letters/${fileNumber}${fileName}.json`)
         .then(res => res.json())
         .then(data => {
-          // اختيار سؤال عشوائي من الملف
           const randomQ = data.questions[Math.floor(Math.random() * data.questions.length)];
           setCurrentQuestion(randomQ);
         })
@@ -49,20 +45,19 @@ const GameArena = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center p-4 font-tajawal">
-      {/* الجزء العلوي: الميكروفون والشعار (نفس التصميم السابق) */}
       <div className="w-full max-w-5xl flex justify-between items-center mb-10 mt-2 px-6 py-4 bg-white/40 rounded-3xl border-2 border-[#3d2b1f]/5 backdrop-blur-sm">
         <div className={`flex flex-col items-start p-4 rounded-2xl transition-all duration-500 ${currentTeam === 'teamA' ? 'bg-[#d36a3e] text-white shadow-[6px_6px_0px_0px_#3d2b1f] scale-105' : 'opacity-40'}`}>
-          <span className="text-[10px] font-bold uppercase tracking-widest mb-1">الفريق البرتقالي</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest mb-1">فريق ريشة البرتقالي</span>
           <div className="flex items-center gap-2">
             {currentTeam === 'teamA' && <span className="animate-pulse">🎤</span>}
             <span className="text-xl font-black">{currentTeam === 'teamA' ? currentPlayer : teamA.name}</span>
           </div>
         </div>
 
-        <img src={logo} alt="Risha" className="h-20 w-auto" />
+        <img src={logo} alt="Risha" className="h-20 w-auto drop-shadow-md" />
 
         <div className={`flex flex-col items-end p-4 rounded-2xl transition-all duration-500 ${currentTeam === 'teamB' ? 'bg-[#3d2b1f] text-[#f5eedc] shadow-[6px_6px_0px_0px_#d36a3e] scale-105' : 'opacity-40'}`}>
-          <span className="text-[10px] font-bold uppercase tracking-widest mb-1">الفريق البني</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest mb-1">فريق ريشة البني</span>
           <div className="flex items-center gap-2">
             <span className="text-xl font-black">{currentTeam === 'teamB' ? currentPlayer : teamB.name}</span>
             {currentTeam === 'teamB' && <span className="animate-pulse">🎤</span>}
