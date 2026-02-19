@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 
 const HexCell = ({ label, status, onClick, disabled }) => {
-  // ألوان هوية ريشة المعتمدة هندسياً لضمان التباين العالي
+  // الألوان المعتمدة لهوية التحدي لضمان أعلى درجات التباين
   const themes = {
-    neutral: { fill: '#ffffff', stroke: '#3d2b1f', text: '#3d2b1f' }, // وضع الانتظار
+    neutral: { fill: '#ffffff', stroke: '#3d2b1f', text: '#3d2b1f' }, // وضع الرقم (انتظار)
     teamA: { fill: '#d36a3e', stroke: '#3d2b1f', text: '#ffffff' }, // الفريق البرتقالي
     teamB: { fill: '#3d2b1f', stroke: '#d36a3e', text: '#f5eedc' }, // الفريق البني
   };
@@ -14,32 +14,32 @@ const HexCell = ({ label, status, onClick, disabled }) => {
 
   return (
     <motion.div
-      whileHover={!disabled ? { scale: 1.05, zIndex: 10 } : {}}
+      whileHover={!disabled ? { scale: 1.05, zIndex: 50 } : {}}
       whileTap={!disabled ? { scale: 0.95 } : {}}
       className={clsx(
-        "relative w-20 h-24 flex items-center justify-center transition-all duration-300",
-        disabled ? "cursor-default opacity-90" : "cursor-pointer"
+        "relative w-16 h-20 sm:w-20 sm:h-24 flex items-center justify-center transition-all duration-300",
+        disabled ? "cursor-default" : "cursor-pointer"
       )}
       onClick={!disabled ? onClick : undefined}
     >
-      {/* الرسم الهندسي باستخدام SVG لضمان حدة الزوايا ومنع التآكل البصري */}
+      {/* رسم هندسي SVG دقيق لضمان حدة الزوايا ومنع التآكل البصري */}
       <svg 
         viewBox="0 0 100 115" 
-        className="absolute inset-0 w-full h-full drop-shadow-md"
+        className="absolute inset-0 w-full h-full drop-shadow-sm"
         style={{ overflow: 'visible' }}
       >
         <polygon
           points="50 0, 100 28.8, 100 86.2, 50 115, 0 86.2, 0 28.8"
           fill={currentTheme.fill}
           stroke={currentTheme.stroke}
-          strokeWidth="8" // زيادة السمك لضمان تلاحم الأضلاع عند التداخل
+          strokeWidth="10" // سمك إطار عالٍ لضمان تداخل الأضلاع وإغلاق الفراغات تماماً
           strokeLinejoin="round"
         />
       </svg>
       
-      {/* عرض الحرف بخط "تجوال" العريض والواضح */}
+      {/* عرض الرقم (1-28) بخط تجوال العريض */}
       <span 
-        className="relative z-10 text-2xl font-black font-tajawal select-none" 
+        className="relative z-10 text-xl sm:text-2xl font-black font-tajawal select-none" 
         style={{ color: currentTheme.text }}
       >
         {label}
