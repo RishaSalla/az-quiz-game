@@ -21,9 +21,10 @@ const GameArena = () => {
 
   // مصفوفة الحروف مطابقة تماماً لمسميات ملفاتك في GitHub
   const letterKeys = [
-    "alif", "ba", "ta", "tha", "jeem", "haa", "kha", "dal", "dhal", "ra", "zay", 
-    "seen", "sheen", "sad", "dad", "ta_a", "zha", "ain", "ghain", "fa", "qaf", 
-    "kaf", "lam", "meem", "noon", "ha_a", "waw", "ya"
+    "01alif", "02ba", "03ta", "04tha", "05jeem", "06haa", "07khaa", "08dal", 
+    "09dhal", "10ra", "11zay", "12seen", "13sheen", "14sad", "15dad", "16ta_a", 
+    "17zha", "18ain", "19ghain", "20fa", "21qaf", "22kaf", "23lam", "24meem", 
+    "25noon", "26ha_a", "27waw", "28ya"
   ];
 
   const letterLabels = [
