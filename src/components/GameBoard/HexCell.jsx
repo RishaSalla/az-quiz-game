@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 
 const HexCell = ({ label, status, onClick, disabled }) => {
-  // الألوان المعتمدة لهوية التحدي لضمان أعلى درجات التباين
+  // تعريف الألوان الرسمية لضمان تباين عالٍ للهوية البصرية
   const themes = {
-    neutral: { fill: '#ffffff', stroke: '#3d2b1f', text: '#3d2b1f' }, // وضع الرقم (انتظار)
+    neutral: { fill: '#ffffff', stroke: '#3d2b1f', text: '#3d2b1f' }, // وضع الانتظار (الرقم)
     teamA: { fill: '#d36a3e', stroke: '#3d2b1f', text: '#ffffff' }, // الفريق البرتقالي
     teamB: { fill: '#3d2b1f', stroke: '#d36a3e', text: '#f5eedc' }, // الفريق البني
   };
@@ -22,7 +22,7 @@ const HexCell = ({ label, status, onClick, disabled }) => {
       )}
       onClick={!disabled ? onClick : undefined}
     >
-      {/* رسم هندسي SVG دقيق لضمان حدة الزوايا ومنع التآكل البصري */}
+      {/* الرسم الهندسي باستخدام SVG لضمان الدقة ومنع الفراغات */}
       <svg 
         viewBox="0 0 100 115" 
         className="absolute inset-0 w-full h-full drop-shadow-sm"
@@ -32,12 +32,14 @@ const HexCell = ({ label, status, onClick, disabled }) => {
           points="50 0, 100 28.8, 100 86.2, 50 115, 0 86.2, 0 28.8"
           fill={currentTheme.fill}
           stroke={currentTheme.stroke}
-          strokeWidth="10" // سمك إطار عالٍ لضمان تداخل الأضلاع وإغلاق الفراغات تماماً
+          /* استخدام سمك إطار عالٍ (10) ليعمل كـ "لاصق بصرى" 
+             يغطي الفجوات البيضاء عند تداخل الصفوف */
+          strokeWidth="10" 
           strokeLinejoin="round"
         />
       </svg>
       
-      {/* عرض الرقم (1-28) بخط تجوال العريض */}
+      {/* عرض الرقم التسلسلي (1-28) بوضوح تام وبدون أي أيقونات */}
       <span 
         className="relative z-10 text-xl sm:text-2xl font-black font-tajawal select-none" 
         style={{ color: currentTheme.text }}
