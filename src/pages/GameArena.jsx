@@ -19,7 +19,6 @@ const GameArena = () => {
   const [showInstructions, setShowInstructions] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
 
-  // مصفوفة الحروف مطابقة تماماً لمسميات ملفاتك في GitHub (الأرقام مع المسميات)
   const letterKeys = [
     "01alif", "02ba", "03ta", "04tha", "05jeem", "06haa", "07khaa", "08dal", 
     "09dhal", "10ra", "11zay", "12seen", "13sheen", "14sad", "15dad", "16ta_a", 
@@ -33,11 +32,6 @@ const GameArena = () => {
     "الكاف", "اللام", "الميم", "النون", "الهاء", "الواو", "الياء"
   ];
 
-  const currentPlayerName = currentTeam === 'teamA' 
-    ? (gameMode === 'team' ? teamA.players[teamAPlayerIndex] : teamA.name)
-    : (gameMode === 'team' ? teamB.players[teamBPlayerIndex] : teamB.name);
-
-  // جلب سؤال عشوائي باستخدام الاستيراد الديناميكي لقراءة الملفات من داخل src
   const handleCellClick = useCallback(async (cell) => {
     if (cells[cell.id]) return;
 
@@ -46,14 +40,13 @@ const GameArena = () => {
     const letterLabel = letterLabels[randomIndex];
 
     try {
-      /* الحل السحري: استخدام import() بدلاً من fetch لضمان الوصول لمجلد 
-         src/data/letters دون أخطاء في المسارات أو تكرار للأرقام.
-      */
+      // استيراد ديناميكي للملف الذي يحتوي على مصفوفة مباشرة
       const module = await import(`../data/letters/${letterKey}.json`);
-      const data = module.default || module;
+      const questionsArray = module.default || module;
 
-      const availableQuestions = data.questions.filter(q => !usedQuestions.includes(q.id));
-      const finalQuestions = availableQuestions.length > 0 ? availableQuestions : data.questions;
+      // تصفية الأسئلة باستخدام "نص السؤال" كبصمة فريدة لمنع التكرار
+      const availableQuestions = questionsArray.filter(q => !usedQuestions.includes(q.question));
+      const finalQuestions = availableQuestions.length > 0 ? availableQuestions : questionsArray;
       
       const randomQ = finalQuestions[Math.floor(Math.random() * finalQuestions.length)];
       setCurrentQuestion({ ...randomQ, label: letterLabel });
@@ -65,11 +58,10 @@ const GameArena = () => {
         setIsTimerActive(true);
       }
     } catch (err) {
-      console.error("خطأ في جلب ملف السؤال من src/data/letters:", err);
+      console.error("خطأ في جلب ملف السؤال:", err);
     }
   }, [cells, timerSetting, usedQuestions]);
 
-  // منطق المؤقت
   useEffect(() => {
     let interval;
     if (isTimerActive && timeLeft > 0) {
@@ -93,7 +85,8 @@ const GameArena = () => {
 
   const handleCorrect = () => {
     setIsTimerActive(false);
-    markQuestionAsUsed(currentQuestion.id);
+    // تسجيل نص السؤال في قائمة الأسئلة المستخدمة
+    markQuestionAsUsed(currentQuestion.question);
     occupyCell(selectedCell.id);
     nextTurn();
     setSelectedCell(null);
@@ -109,14 +102,14 @@ const GameArena = () => {
       <div className="w-full max-w-5xl flex justify-between items-center mb-6 px-6 py-4 bg-white/40 rounded-3xl border-2 border-[#3d2b1f]/10 backdrop-blur-sm shadow-sm">
         <div className={`p-4 rounded-2xl transition-all duration-500 ${currentTeam === 'teamA' ? 'bg-[#d36a3e] text-white shadow-xl scale-105' : 'opacity-20'}`}>
           <div className="text-[10px] font-black uppercase tracking-widest mb-1">الطرف البرتقالي</div>
-          <div className="text-xl font-black">{currentTeam === 'teamA' ? 'متحدث الآن: ' : ''}{teamA.name}</div>
+          <div className="text-xl font-black">{currentTeam === 'teamA' ? 'دور: ' : ''}{teamA.name}</div>
         </div>
 
         <img src={logo} alt="Risha" className="h-14" />
 
         <div className={`p-4 rounded-2xl transition-all duration-500 ${currentTeam === 'teamB' ? 'bg-[#3d2b1f] text-white shadow-xl scale-105' : 'opacity-20'}`}>
           <div className="text-[10px] font-black uppercase tracking-widest mb-1 text-right">الطرف البني</div>
-          <div className="text-xl font-black">{currentTeam === 'teamB' ? 'متحدث الآن: ' : ''}{teamB.name}</div>
+          <div className="text-xl font-black">{currentTeam === 'teamB' ? 'دور: ' : ''}{teamB.name}</div>
         </div>
       </div>
 
@@ -154,8 +147,8 @@ const GameArena = () => {
                     <p className="text-2xl font-black">{currentQuestion.answer}</p>
                   </div>
                   <div className="flex gap-4">
-                    <button onClick={handleCorrect} className="flex-1 bg-green-700 text-white py-5 rounded-2xl font-black text-xl border-b-8 border-green-900 active:border-b-0 active:translate-y-2 transition-all">إجابة صحيحة</button>
-                    <button onClick={handleSkip} className="flex-1 bg-red-700 text-white py-5 rounded-2xl font-black text-xl border-b-8 border-red-900 active:border-b-0 active:translate-y-2 transition-all">إجابة خاطئة</button>
+                    <button onClick={handleCorrect} className="flex-1 bg-green-700 text-white py-5 rounded-2xl font-black text-xl border-b-8 border-green-900 active:border-b-0 active:translate-y-2 transition-all">صح</button>
+                    <button onClick={handleSkip} className="flex-1 bg-red-700 text-white py-5 rounded-2xl font-black text-xl border-b-8 border-red-900 active:border-b-0 active:translate-y-2 transition-all">خطأ</button>
                   </div>
                 </div>
               )}
@@ -193,11 +186,14 @@ const GameArena = () => {
             <div className="bg-[#f5eedc] border-4 border-[#3d2b1f] p-10 rounded-[40px] max-w-2xl w-full relative shadow-2xl">
               <button onClick={() => setShowInstructions(false)} className="absolute top-6 left-6 font-black text-red-600">إغلاق</button>
               <h2 className="text-2xl font-black mb-6">قوانين التحدي</h2>
-              <ul className="space-y-4 font-bold text-lg text-right">
+              <ul className="space-y-4 font-bold text-lg text-right mb-10">
                 <li>• الفوز يتطلب توصيل أضلاع الهرم الثلاثة (اليمين، اليسار، القاعدة).</li>
                 <li>• الحروف تظهر بشكل عشوائي تماماً عند كل ضغطة لزيادة الإثارة.</li>
                 <li>• زر التخطي أو انتهاء الوقت يغلق الخلية ويحول الدور للمنافس.</li>
               </ul>
+              <div className="border-t-2 border-[#3d2b1f]/10 pt-6 text-center">
+                <p className="text-xs font-bold opacity-60">هذه اللعبة هي نسخة مطورة ومستوحاة من البرنامج التشيكي الشهير (AZ-kvíz)</p>
+              </div>
             </div>
           </div>
         )}
