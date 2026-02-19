@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom'; // إضافة للتنقل
 import useGameStore from '../store/useGameStore';
 import PyramidGrid from '../components/GameBoard/PyramidGrid';
 import logo from '../assets/logo.risha.png';
 
 const GameArena = () => {
+  const navigate = useNavigate();
   const { 
     teamA, teamB, currentTeam, teamAPlayerIndex, teamBPlayerIndex, 
     gameMode, timerSetting, status, winnerData, cells, usedQuestions,
-    cellLetters, refreshCellLetter, // استدعاء البيانات الجديدة من المخزن
-    occupyCell, nextTurn, resetGame, markQuestionAsUsed 
+    cellLetters, refreshCellLetter, 
+    occupyCell, nextTurn, resetGame, markQuestionAsUsed,
+    setGameSetup // استدعاء دالة الإعداد لإعادة التحدي
   } = useGameStore();
 
   const [selectedCell, setSelectedCell] = useState(null);
@@ -33,11 +36,12 @@ const GameArena = () => {
     "الكاف", "اللام", "الميم", "النون", "الهاء", "الواو", "الياء"
   ];
 
-  // جلب السؤال بناءً على الحرف المخصص للخلية في المخزن
+  // رسم الهرم المصغر للمسار
+  const pyramidRows = [ [1], [2,3], [4,5,6], [7,8,9,10], [11,12,13,14,15], [16,17,18,19,20,21], [22,23,24,25,26,27,28] ];
+
   const handleCellClick = useCallback(async (cell) => {
     if (cells[cell.id]) return;
 
-    // الحصول على الحرف المخصص لهذه الخلية تحديداً من المخزن
     const letterKey = cellLetters[cell.id];
     const letterIndex = letterKeys.indexOf(letterKey);
     const letterLabel = letterLabels[letterIndex];
@@ -73,14 +77,10 @@ const GameArena = () => {
     return () => clearInterval(interval);
   }, [isTimerActive, timeLeft]);
 
-  // عند الخطأ أو التخطي: نقوم بتغيير الحرف المخصص لهذه الخلية فوراً
   const handleSkip = () => {
     setIsTimerActive(false);
     setIsShaking(true);
-    
-    // تبديل الحرف المرتبط بهذا الرقم في المخزن لكي لا يتكرر
     refreshCellLetter(selectedCell.id);
-
     setTimeout(() => {
       setIsShaking(false);
       setSelectedCell(null);
@@ -95,6 +95,17 @@ const GameArena = () => {
     occupyCell(selectedCell.id);
     nextTurn();
     setSelectedCell(null);
+  };
+
+  // وظيفة إعادة التحدي بنفس الأسماء
+  const handleRematch = () => {
+    setGameSetup({ teamA, teamB, gameMode, timerSetting });
+  };
+
+  // وظيفة العودة للقائمة الرئيسية
+  const handleMainMenu = () => {
+    resetGame();
+    navigate('/');
   };
 
   return (
@@ -118,28 +129,23 @@ const GameArena = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center w-full">
+      <div className="flex-1 flex items-center justify-center w-full max-w-6xl mx-auto">
         <PyramidGrid onCellClick={handleCellClick} />
       </div>
 
       <AnimatePresence>
         {selectedCell && currentQuestion && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3d2b1f]/90 backdrop-blur-md">
-            <motion.div 
-              animate={isShaking ? { x: [-10, 10, -10, 10, 0] } : {}}
-              className="bg-[#f5eedc] border-4 border-[#3d2b1f] p-8 rounded-[40px] max-w-xl w-full shadow-2xl relative"
-            >
+            <motion.div animate={isShaking ? { x: [-10, 10, -10, 10, 0] } : {}} className="bg-[#f5eedc] border-4 border-[#3d2b1f] p-8 rounded-[40px] max-w-xl w-full shadow-2xl relative">
               {timerSetting !== 'off' && (
                 <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full border-4 border-[#3d2b1f] flex items-center justify-center font-black text-xl ${timeLeft <= 5 ? 'bg-red-600 text-white animate-pulse' : 'bg-white'}`}>
                   {timeLeft}
                 </div>
               )}
-
               <div className="text-center mb-8 pt-4">
                 <p className="text-[#d36a3e] font-black text-xl mb-4">الإجابة تبدأ بحرف: {currentQuestion.label}</p>
                 <h3 className="text-2xl font-black leading-relaxed">{currentQuestion.question}</h3>
               </div>
-
               {!showAnswer ? (
                 <div className="space-y-4">
                   <button onClick={() => { setShowAnswer(true); setIsTimerActive(false); }} className="w-full bg-[#d36a3e] text-white py-5 rounded-2xl font-black text-xl border-b-8 border-[#3d2b1f] active:border-b-0 active:translate-y-2 transition-all">إظهار الإجابة</button>
@@ -162,15 +168,27 @@ const GameArena = () => {
         )}
       </AnimatePresence>
 
+      {/* نافذة الفوز المطورة بختم المسار والخيارات المتعددة */}
       <AnimatePresence>
         {status === 'winner' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-[#d36a3e] p-6 text-center">
-            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="bg-[#f5eedc] p-12 rounded-[50px] border-8 border-[#3d2b1f] shadow-2xl max-w-2xl w-full">
-              <svg viewBox="0 0 100 100" className="w-24 h-24 mx-auto mb-6">
-                <polygon points="50 5, 95 85, 5 85" fill="none" stroke="#3d2b1f" strokeWidth="5" />
-                <path d="M30 60 L50 40 L70 60" fill="none" stroke="#d36a3e" strokeWidth="8" strokeLinecap="round" />
-              </svg>
-              <h1 className="text-5xl font-black text-[#3d2b1f] mb-4">مبروك!</h1>
+            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="bg-[#f5eedc] p-10 rounded-[50px] border-8 border-[#3d2b1f] shadow-2xl max-w-2xl w-full">
+              
+              {/* رسم الهرم المصغر لمسار الفوز */}
+              <div className="flex flex-col items-center gap-1 mb-8">
+                {pyramidRows.map((row, rIdx) => (
+                  <div key={rIdx} className="flex gap-1">
+                    {row.map(cellId => (
+                      <div 
+                        key={cellId} 
+                        className={`w-3 h-3 rounded-sm rotate-45 border border-[#3d2b1f]/20 ${cells[cellId] === (winnerData.name === teamA.name ? 'teamA' : 'teamB') ? (cells[cellId] === 'teamA' ? 'bg-[#d36a3e]' : 'bg-[#3d2b1f]') : 'bg-white/30'}`}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              <h1 className="text-5xl font-black text-[#3d2b1f] mb-2 uppercase tracking-tighter">مبروك!</h1>
               <div className="text-4xl font-black text-[#d36a3e] mb-2 leading-tight">
                 {winnerData.name}
               </div>
@@ -179,7 +197,11 @@ const GameArena = () => {
                   {winnerData.players.join(' ، ')}
                 </div>
               )}
-              <button onClick={resetGame} className="bg-[#3d2b1f] text-white px-12 py-5 rounded-3xl font-black text-xl">تحدي جديد</button>
+              
+              <div className="flex flex-col gap-3 mt-8">
+                <button onClick={handleRematch} className="bg-[#3d2b1f] text-white px-12 py-5 rounded-3xl font-black text-xl border-b-8 border-black active:border-0 active:translate-y-1 transition-all">تحدي جديد (نفس الأسماء)</button>
+                <button onClick={handleMainMenu} className="text-[#3d2b1f] font-black text-sm opacity-60 hover:opacity-100 transition-opacity">العودة للقائمة الرئيسية</button>
+              </div>
             </motion.div>
           </motion.div>
         )}
