@@ -8,6 +8,7 @@ const GameArena = () => {
   const { 
     teamA, teamB, currentTeam, teamAPlayerIndex, teamBPlayerIndex, 
     gameMode, timerSetting, status, winnerData, cells, usedQuestions,
+    cellLetters, refreshCellLetter, // استدعاء البيانات الجديدة من المخزن
     occupyCell, nextTurn, resetGame, markQuestionAsUsed 
   } = useGameStore();
 
@@ -32,19 +33,19 @@ const GameArena = () => {
     "الكاف", "اللام", "الميم", "النون", "الهاء", "الواو", "الياء"
   ];
 
+  // جلب السؤال بناءً على الحرف المخصص للخلية في المخزن
   const handleCellClick = useCallback(async (cell) => {
     if (cells[cell.id]) return;
 
-    const randomIndex = Math.floor(Math.random() * letterKeys.length);
-    const letterKey = letterKeys[randomIndex];
-    const letterLabel = letterLabels[randomIndex];
+    // الحصول على الحرف المخصص لهذه الخلية تحديداً من المخزن
+    const letterKey = cellLetters[cell.id];
+    const letterIndex = letterKeys.indexOf(letterKey);
+    const letterLabel = letterLabels[letterIndex];
 
     try {
-      // استيراد ديناميكي للملف الذي يحتوي على مصفوفة مباشرة
       const module = await import(`../data/letters/${letterKey}.json`);
       const questionsArray = module.default || module;
 
-      // تصفية الأسئلة باستخدام "نص السؤال" كبصمة فريدة لمنع التكرار
       const availableQuestions = questionsArray.filter(q => !usedQuestions.includes(q.question));
       const finalQuestions = availableQuestions.length > 0 ? availableQuestions : questionsArray;
       
@@ -60,7 +61,7 @@ const GameArena = () => {
     } catch (err) {
       console.error("خطأ في جلب ملف السؤال:", err);
     }
-  }, [cells, timerSetting, usedQuestions]);
+  }, [cells, timerSetting, usedQuestions, cellLetters]);
 
   useEffect(() => {
     let interval;
@@ -72,9 +73,14 @@ const GameArena = () => {
     return () => clearInterval(interval);
   }, [isTimerActive, timeLeft]);
 
+  // عند الخطأ أو التخطي: نقوم بتغيير الحرف المخصص لهذه الخلية فوراً
   const handleSkip = () => {
     setIsTimerActive(false);
     setIsShaking(true);
+    
+    // تبديل الحرف المرتبط بهذا الرقم في المخزن لكي لا يتكرر
+    refreshCellLetter(selectedCell.id);
+
     setTimeout(() => {
       setIsShaking(false);
       setSelectedCell(null);
@@ -85,7 +91,6 @@ const GameArena = () => {
 
   const handleCorrect = () => {
     setIsTimerActive(false);
-    // تسجيل نص السؤال في قائمة الأسئلة المستخدمة
     markQuestionAsUsed(currentQuestion.question);
     occupyCell(selectedCell.id);
     nextTurn();
