@@ -7,8 +7,8 @@ import logo from '../assets/logo.risha.png';
 const GameArena = () => {
   const { 
     teamA, teamB, currentTeam, teamAPlayerIndex, teamBPlayerIndex, 
-    gameMode, timerSetting, status, winnerData, cells,
-    occupyCell, nextTurn, resetGame 
+    gameMode, timerSetting, status, winnerData, cells, usedQuestions,
+    occupyCell, nextTurn, resetGame, markQuestionAsUsed 
   } = useGameStore();
 
   const [selectedCell, setSelectedCell] = useState(null);
@@ -16,91 +16,111 @@ const GameArena = () => {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
 
-  // قائمة الحروف للمسارات العشوائية
-  const letterKeys = ["alif", "baa", "taa", "thaa", "jeem", "haa", "khaa", "daal", "thaal", "raa", "zaay", "seen", "sheen", "saad", "daad", "taa_v2", "zaa", "ayn", "ghayn", "faa", "qaaf", "kaaf", "laam", "meem", "noon", "haa_v2", "waaw", "yaa"];
-  const letterLabels = ["الألف", "الباء", "التاء", "الثاء", "الجيم", "الحاء", "الخاء", "الدال", "الذال", "الراء", "الزاي", "السين", "الشين", "الصاد", "الضاد", "الطاء", "الظاء", "العين", "الغين", "الفاء", "القاف", "الكاف", "اللام", "الميم", "النون", "الهاء", "الواو", "الياء"];
+  // مصفوفة الحروف مطابقة تماماً لمسميات ملفاتك في GitHub
+  const letterKeys = [
+    "alif", "ba", "ta", "tha", "jeem", "haa", "kha", "dal", "dhal", "ra", "zay", 
+    "seen", "sheen", "sad", "dad", "ta_a", "zha", "ain", "ghain", "fa", "qaf", 
+    "kaf", "lam", "meem", "noon", "ha_a", "waw", "ya"
+  ];
 
-  // تحديد اسم المتحدث الحالي (فردي أو فريق)
+  const letterLabels = [
+    "الألف", "الباء", "التاء", "الثاء", "الجيم", "الحاء", "الخاء", "الدال", "الذال", "الراء", "الزاي", 
+    "السين", "الشين", "الصاد", "الضاد", "الطاء", "الظاء", "العين", "الغين", "الفاء", "القاف", 
+    "الكاف", "اللام", "الميم", "النون", "الهاء", "الواو", "الياء"
+  ];
+
   const currentPlayerName = currentTeam === 'teamA' 
     ? (gameMode === 'team' ? teamA.players[teamAPlayerIndex] : teamA.name)
     : (gameMode === 'team' ? teamB.players[teamBPlayerIndex] : teamB.name);
 
-  // منطق العشوائية عند الضغط على الرقم
+  // جلب سؤال عشوائي مع منع التكرار وتطابق المسارات
   const handleCellClick = useCallback((cell) => {
-    if (cells[cell.id]) return; // الخلية محجوزة مسبقاً
+    if (cells[cell.id]) return;
 
     const randomIndex = Math.floor(Math.random() * letterKeys.length);
     const letterKey = letterKeys[randomIndex];
     const letterLabel = letterLabels[randomIndex];
     const fileNumber = (randomIndex + 1).toString().padStart(2, '0');
 
+    // المسار مطابق لصور GitHub: data/letters/01alif.json ... إلخ
     fetch(`data/letters/${fileNumber}${letterKey}.json`)
       .then(res => res.json())
       .then(data => {
-        const randomQ = data.questions[Math.floor(Math.random() * data.questions.length)];
+        // فلترة الأسئلة التي لم تُستخدم بعد في هذه الجلسة
+        const availableQuestions = data.questions.filter(q => !usedQuestions.includes(q.id));
+        const finalQuestions = availableQuestions.length > 0 ? availableQuestions : data.questions;
+        
+        const randomQ = finalQuestions[Math.floor(Math.random() * finalQuestions.length)];
         setCurrentQuestion({ ...randomQ, label: letterLabel });
         setSelectedCell(cell);
         setShowAnswer(false);
         
-        // تشغيل المؤقت إذا كان مفعلاً
         if (timerSetting !== 'off') {
           setTimeLeft(parseInt(timerSetting));
           setIsTimerActive(true);
         }
       })
-      .catch(err => console.error("خطأ في تحميل السؤال:", err));
-  }, [cells, timerSetting]);
+      .catch(err => console.error("خطأ في المسار:", err));
+  }, [cells, timerSetting, usedQuestions]);
 
-  // تحديث المؤقت
+  // منطق المؤقت
   useEffect(() => {
     let interval;
     if (isTimerActive && timeLeft > 0) {
       interval = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (timeLeft === 0 && isTimerActive) {
-      handleSkip(); // انتهى الوقت = تخطي (خطأ)
+      handleSkip();
     }
     return () => clearInterval(interval);
   }, [isTimerActive, timeLeft]);
 
+  // التخطي أو الخطأ: اهتزاز ثم إغلاق
   const handleSkip = () => {
     setIsTimerActive(false);
-    setSelectedCell(null);
-    setCurrentQuestion(null);
-    nextTurn();
+    setIsShaking(true);
+    setTimeout(() => {
+      setIsShaking(false);
+      setSelectedCell(null);
+      setCurrentQuestion(null);
+      nextTurn();
+    }, 500);
   };
 
   const handleCorrect = () => {
     setIsTimerActive(false);
+    markQuestionAsUsed(currentQuestion.id);
     occupyCell(selectedCell.id);
     nextTurn();
     setSelectedCell(null);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 bg-[#f5eedc] font-tajawal text-[#3d2b1f]">
+    <div className="min-h-screen flex flex-col items-center p-4 bg-[#f5eedc] font-tajawal text-[#3d2b1f] relative overflow-hidden">
       
-      {/* رأس الصفحة: الميكروفون واللاعبين */}
-      <div className="w-full max-w-5xl flex justify-between items-center mb-6 px-6 py-4 bg-white/40 rounded-3xl border-2 border-[#3d2b1f]/10 backdrop-blur-sm">
-        <div className={`p-4 rounded-2xl transition-all ${currentTeam === 'teamA' ? 'bg-[#d36a3e] text-white shadow-lg scale-105' : 'opacity-30'}`}>
-          <div className="text-[10px] font-bold mb-1 uppercase tracking-tighter">الطرف البرتقالي</div>
-          <div className="flex items-center gap-2 font-black text-lg">
-            {currentTeam === 'teamA' && <span className="animate-pulse">🎤</span>} {currentPlayerName}
-          </div>
+      {/* زر التعليمات الجانبي */}
+      <button onClick={() => setShowInstructions(true)} className="fixed left-0 top-1/2 -translate-y-1/2 bg-[#3d2b1f] text-white px-2 py-6 rounded-r-2xl font-black text-xs z-40" style={{ writingMode: 'vertical-rl' }}>
+        قوانين التحدي
+      </button>
+
+      {/* لوحة النتائج والدور */}
+      <div className="w-full max-w-5xl flex justify-between items-center mb-6 px-6 py-4 bg-white/40 rounded-3xl border-2 border-[#3d2b1f]/10 backdrop-blur-sm shadow-sm">
+        <div className={`p-4 rounded-2xl transition-all duration-500 ${currentTeam === 'teamA' ? 'bg-[#d36a3e] text-white shadow-xl scale-105' : 'opacity-20'}`}>
+          <div className="text-[10px] font-black uppercase tracking-widest mb-1">الطرف البرتقالي</div>
+          <div className="text-xl font-black">{currentTeam === 'teamA' ? 'متحدث الآن: ' : ''}{teamA.name}</div>
         </div>
 
         <img src={logo} alt="Risha" className="h-14" />
 
-        <div className={`p-4 rounded-2xl transition-all ${currentTeam === 'teamB' ? 'bg-[#3d2b1f] text-white shadow-lg scale-105' : 'opacity-30'}`}>
-          <div className="text-[10px] font-bold mb-1 uppercase tracking-tighter text-right">الطرف البني</div>
-          <div className="flex items-center gap-2 font-black text-lg">
-            {currentPlayerName} {currentTeam === 'teamB' && <span className="animate-pulse">🎤</span>}
-          </div>
+        <div className={`p-4 rounded-2xl transition-all duration-500 ${currentTeam === 'teamB' ? 'bg-[#3d2b1f] text-white shadow-xl scale-105' : 'opacity-20'}`}>
+          <div className="text-[10px] font-black uppercase tracking-widest mb-1 text-right">الطرف البني</div>
+          <div className="text-xl font-black">{currentTeam === 'teamB' ? 'متحدث الآن: ' : ''}{teamB.name}</div>
         </div>
       </div>
 
-      {/* الهرم */}
-      <div className="flex-1 flex items-center justify-center w-full overflow-hidden">
+      <div className="flex-1 flex items-center justify-center w-full">
         <PyramidGrid onCellClick={handleCellClick} />
       </div>
 
@@ -108,18 +128,18 @@ const GameArena = () => {
       <AnimatePresence>
         {selectedCell && currentQuestion && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3d2b1f]/90 backdrop-blur-md">
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-[#f5eedc] border-4 border-[#3d2b1f] p-8 rounded-[40px] max-w-xl w-full shadow-2xl relative">
-              
-              {/* المؤقت */}
+            <motion.div 
+              animate={isShaking ? { x: [-10, 10, -10, 10, 0] } : {}}
+              className="bg-[#f5eedc] border-4 border-[#3d2b1f] p-8 rounded-[40px] max-w-xl w-full shadow-2xl relative"
+            >
               {timerSetting !== 'off' && (
-                <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full border-4 border-[#3d2b1f] flex items-center justify-center font-black text-2xl ${timeLeft <= 5 ? 'bg-red-500 text-white animate-bounce' : 'bg-white text-[#3d2b1f]'}`}>
+                <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full border-4 border-[#3d2b1f] flex items-center justify-center font-black text-xl ${timeLeft <= 5 ? 'bg-red-600 text-white animate-pulse' : 'bg-white'}`}>
                   {timeLeft}
                 </div>
               )}
 
-              <div className="text-center mb-8 mt-4">
-                <p className="text-[#d36a3e] font-black text-xl mb-2">الإجابة تبدأ بحرف: {currentQuestion.label}</p>
-                <div className="h-1 w-20 bg-[#3d2b1f]/10 mx-auto mb-6"></div>
+              <div className="text-center mb-8 pt-4">
+                <p className="text-[#d36a3e] font-black text-xl mb-4">الإجابة تبدأ بحرف: {currentQuestion.label}</p>
                 <h3 className="text-2xl font-black leading-relaxed">{currentQuestion.question}</h3>
               </div>
 
@@ -131,12 +151,12 @@ const GameArena = () => {
               ) : (
                 <div className="space-y-6">
                   <div className="p-6 bg-white/60 rounded-3xl border-2 border-dashed border-[#d36a3e] text-center">
-                    <span className="text-xs font-bold block mb-1 opacity-50 text-[#3d2b1f]">الإجابة هي</span>
+                    <span className="text-xs font-bold block mb-1 opacity-50">الإجابة النموذجية</span>
                     <p className="text-2xl font-black">{currentQuestion.answer}</p>
                   </div>
                   <div className="flex gap-4">
-                    <button onClick={handleCorrect} className="flex-1 bg-green-600 text-white py-5 rounded-2xl font-black text-xl border-b-8 border-green-900 active:border-b-0 active:translate-y-2 transition-all">صحيحة</button>
-                    <button onClick={handleSkip} className="flex-1 bg-red-600 text-white py-5 rounded-2xl font-black text-xl border-b-8 border-red-900 active:border-b-0 active:translate-y-2 transition-all">خاطئة</button>
+                    <button onClick={handleCorrect} className="flex-1 bg-green-700 text-white py-5 rounded-2xl font-black text-xl border-b-8 border-green-900 active:border-b-0 active:translate-y-2 transition-all">إجابة صحيحة</button>
+                    <button onClick={handleSkip} className="flex-1 bg-red-700 text-white py-5 rounded-2xl font-black text-xl border-b-8 border-red-900 active:border-b-0 active:translate-y-2 transition-all">إجابة خاطئة</button>
                   </div>
                 </div>
               )}
@@ -145,19 +165,44 @@ const GameArena = () => {
         )}
       </AnimatePresence>
 
-      {/* نافذة الفوز النهائي */}
+      {/* بطاقة الفوز (Victory Card) */}
       <AnimatePresence>
         {status === 'winner' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-[#d36a3e] p-6 text-center">
-            <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }} className="bg-[#f5eedc] p-12 rounded-[50px] border-8 border-[#3d2b1f] shadow-2xl max-w-2xl w-full">
-              <h1 className="text-6xl font-black text-[#3d2b1f] mb-6">مبروك!</h1>
-              <div className="text-3xl font-bold mb-4">الفائز هو:</div>
-              <div className="text-5xl font-black text-[#d36a3e] mb-8">
-                {gameMode === 'single' ? winnerData.name : winnerData.players.join(' ، ')}
+            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="bg-[#f5eedc] p-12 rounded-[50px] border-8 border-[#3d2b1f] shadow-2xl max-w-2xl w-full">
+              <svg viewBox="0 0 100 100" className="w-24 h-24 mx-auto mb-6">
+                <polygon points="50 5, 95 85, 5 85" fill="none" stroke="#3d2b1f" strokeWidth="5" />
+                <path d="M30 60 L50 40 L70 60" fill="none" stroke="#d36a3e" strokeWidth="8" strokeLinecap="round" />
+              </svg>
+              <h1 className="text-5xl font-black text-[#3d2b1f] mb-4">مبروك!</h1>
+              <div className="text-4xl font-black text-[#d36a3e] mb-2 leading-tight">
+                {gameMode === 'single' ? winnerData.name : winnerData.name}
               </div>
-              <button onClick={resetGame} className="bg-[#3d2b1f] text-white px-12 py-5 rounded-3xl font-black text-xl">العودة للرئيسية</button>
+              {gameMode === 'team' && (
+                <div className="text-xl font-bold text-[#3d2b1f] mb-8 opacity-70">
+                  {winnerData.players.join(' ، ')}
+                </div>
+              )}
+              <button onClick={resetGame} className="bg-[#3d2b1f] text-white px-12 py-5 rounded-3xl font-black text-xl">تحدي جديد</button>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* نافذة القوانين المنبثقة */}
+      <AnimatePresence>
+        {showInstructions && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#3d2b1f]/90 backdrop-blur-sm">
+            <div className="bg-[#f5eedc] border-4 border-[#3d2b1f] p-10 rounded-[40px] max-w-2xl w-full relative">
+              <button onClick={() => setShowInstructions(false)} className="absolute top-6 left-6 font-black text-red-600">إغلاق</button>
+              <h2 className="text-2xl font-black mb-6">قوانين التحدي</h2>
+              <ul className="space-y-4 font-bold text-lg">
+                <li>• الفوز يتطلب توصيل **أضلاع الهرم الثلاثة** (اليمين، اليسار، القاعدة).</li>
+                <li>• الحروف تظهر بشكل عشوائي تماماً عند كل ضغطة لزيادة الإثارة.</li>
+                <li>• زر التخطي أو انتهاء الوقت يغلق الخلية ويحول الدور للمنافس.</li>
+              </ul>
+            </div>
+          </div>
         )}
       </AnimatePresence>
     </div>
