@@ -19,7 +19,7 @@ const GameArena = () => {
   const [showInstructions, setShowInstructions] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
 
-  // مصفوفة الحروف مطابقة تماماً لمسميات ملفاتك في GitHub
+  // مصفوفة الحروف مطابقة تماماً لمسميات ملفاتك في GitHub (الأرقام مع المسميات)
   const letterKeys = [
     "01alif", "02ba", "03ta", "04tha", "05jeem", "06haa", "07khaa", "08dal", 
     "09dhal", "10ra", "11zay", "12seen", "13sheen", "14sad", "15dad", "16ta_a", 
@@ -37,34 +37,36 @@ const GameArena = () => {
     ? (gameMode === 'team' ? teamA.players[teamAPlayerIndex] : teamA.name)
     : (gameMode === 'team' ? teamB.players[teamBPlayerIndex] : teamB.name);
 
-  // جلب سؤال عشوائي مع منع التكرار وتطابق المسارات
-  const handleCellClick = useCallback((cell) => {
+  // جلب سؤال عشوائي باستخدام الاستيراد الديناميكي لقراءة الملفات من داخل src
+  const handleCellClick = useCallback(async (cell) => {
     if (cells[cell.id]) return;
 
     const randomIndex = Math.floor(Math.random() * letterKeys.length);
     const letterKey = letterKeys[randomIndex];
     const letterLabel = letterLabels[randomIndex];
-    const fileNumber = (randomIndex + 1).toString().padStart(2, '0');
 
-    // المسار مطابق لصور GitHub: data/letters/01alif.json ... إلخ
-    fetch(`data/letters/${fileNumber}${letterKey}.json`)
-      .then(res => res.json())
-      .then(data => {
-        // فلترة الأسئلة التي لم تُستخدم بعد في هذه الجلسة
-        const availableQuestions = data.questions.filter(q => !usedQuestions.includes(q.id));
-        const finalQuestions = availableQuestions.length > 0 ? availableQuestions : data.questions;
-        
-        const randomQ = finalQuestions[Math.floor(Math.random() * finalQuestions.length)];
-        setCurrentQuestion({ ...randomQ, label: letterLabel });
-        setSelectedCell(cell);
-        setShowAnswer(false);
-        
-        if (timerSetting !== 'off') {
-          setTimeLeft(parseInt(timerSetting));
-          setIsTimerActive(true);
-        }
-      })
-      .catch(err => console.error("خطأ في المسار:", err));
+    try {
+      /* الحل السحري: استخدام import() بدلاً من fetch لضمان الوصول لمجلد 
+         src/data/letters دون أخطاء في المسارات أو تكرار للأرقام.
+      */
+      const module = await import(`../data/letters/${letterKey}.json`);
+      const data = module.default || module;
+
+      const availableQuestions = data.questions.filter(q => !usedQuestions.includes(q.id));
+      const finalQuestions = availableQuestions.length > 0 ? availableQuestions : data.questions;
+      
+      const randomQ = finalQuestions[Math.floor(Math.random() * finalQuestions.length)];
+      setCurrentQuestion({ ...randomQ, label: letterLabel });
+      setSelectedCell(cell);
+      setShowAnswer(false);
+      
+      if (timerSetting !== 'off') {
+        setTimeLeft(parseInt(timerSetting));
+        setIsTimerActive(true);
+      }
+    } catch (err) {
+      console.error("خطأ في جلب ملف السؤال من src/data/letters:", err);
+    }
   }, [cells, timerSetting, usedQuestions]);
 
   // منطق المؤقت
@@ -78,7 +80,6 @@ const GameArena = () => {
     return () => clearInterval(interval);
   }, [isTimerActive, timeLeft]);
 
-  // التخطي أو الخطأ: اهتزاز ثم إغلاق
   const handleSkip = () => {
     setIsTimerActive(false);
     setIsShaking(true);
@@ -101,12 +102,10 @@ const GameArena = () => {
   return (
     <div className="min-h-screen flex flex-col items-center p-4 bg-[#f5eedc] font-tajawal text-[#3d2b1f] relative overflow-hidden">
       
-      {/* زر التعليمات الجانبي */}
       <button onClick={() => setShowInstructions(true)} className="fixed left-0 top-1/2 -translate-y-1/2 bg-[#3d2b1f] text-white px-2 py-6 rounded-r-2xl font-black text-xs z-40" style={{ writingMode: 'vertical-rl' }}>
         قوانين التحدي
       </button>
 
-      {/* لوحة النتائج والدور */}
       <div className="w-full max-w-5xl flex justify-between items-center mb-6 px-6 py-4 bg-white/40 rounded-3xl border-2 border-[#3d2b1f]/10 backdrop-blur-sm shadow-sm">
         <div className={`p-4 rounded-2xl transition-all duration-500 ${currentTeam === 'teamA' ? 'bg-[#d36a3e] text-white shadow-xl scale-105' : 'opacity-20'}`}>
           <div className="text-[10px] font-black uppercase tracking-widest mb-1">الطرف البرتقالي</div>
@@ -125,7 +124,6 @@ const GameArena = () => {
         <PyramidGrid onCellClick={handleCellClick} />
       </div>
 
-      {/* نافذة السؤال (Modal) */}
       <AnimatePresence>
         {selectedCell && currentQuestion && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3d2b1f]/90 backdrop-blur-md">
@@ -166,7 +164,6 @@ const GameArena = () => {
         )}
       </AnimatePresence>
 
-      {/* بطاقة الفوز (Victory Card) */}
       <AnimatePresence>
         {status === 'winner' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-[#d36a3e] p-6 text-center">
@@ -177,7 +174,7 @@ const GameArena = () => {
               </svg>
               <h1 className="text-5xl font-black text-[#3d2b1f] mb-4">مبروك!</h1>
               <div className="text-4xl font-black text-[#d36a3e] mb-2 leading-tight">
-                {gameMode === 'single' ? winnerData.name : winnerData.name}
+                {winnerData.name}
               </div>
               {gameMode === 'team' && (
                 <div className="text-xl font-bold text-[#3d2b1f] mb-8 opacity-70">
@@ -190,15 +187,14 @@ const GameArena = () => {
         )}
       </AnimatePresence>
 
-      {/* نافذة القوانين المنبثقة */}
       <AnimatePresence>
         {showInstructions && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#3d2b1f]/90 backdrop-blur-sm">
-            <div className="bg-[#f5eedc] border-4 border-[#3d2b1f] p-10 rounded-[40px] max-w-2xl w-full relative">
+            <div className="bg-[#f5eedc] border-4 border-[#3d2b1f] p-10 rounded-[40px] max-w-2xl w-full relative shadow-2xl">
               <button onClick={() => setShowInstructions(false)} className="absolute top-6 left-6 font-black text-red-600">إغلاق</button>
               <h2 className="text-2xl font-black mb-6">قوانين التحدي</h2>
-              <ul className="space-y-4 font-bold text-lg">
-                <li>• الفوز يتطلب توصيل **أضلاع الهرم الثلاثة** (اليمين، اليسار، القاعدة).</li>
+              <ul className="space-y-4 font-bold text-lg text-right">
+                <li>• الفوز يتطلب توصيل أضلاع الهرم الثلاثة (اليمين، اليسار، القاعدة).</li>
                 <li>• الحروف تظهر بشكل عشوائي تماماً عند كل ضغطة لزيادة الإثارة.</li>
                 <li>• زر التخطي أو انتهاء الوقت يغلق الخلية ويحول الدور للمنافس.</li>
               </ul>
