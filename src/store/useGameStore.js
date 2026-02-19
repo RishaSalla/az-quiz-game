@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// خريطة الجيران الدقيقة لكل خلية (1-28) لضمان دقة التوصيل
+// خريطة الجيران الدقيقة لضمان دقة التوصيل الهندي (1-28)
 const adjacencyMap = {
   1: [2, 3],
   2: [1, 3, 4, 5], 3: [1, 2, 5, 6],
@@ -39,9 +39,10 @@ const useGameStore = create(
       teamBPlayerIndex: 0,
       cells: {}, 
       usedQuestions: [],
+      usedLetterKeys: [], // إضافة لتتبع المفاتيح المستخدمة فعلياً
       status: 'setup',
       winnerData: null,
-      cellLetters: {}, // خريطة الحروف الموزعة على الأرقام
+      cellLetters: {},
 
       setGameSetup: (config) => {
         const shuffled = shuffleArray(letterKeysBase);
@@ -55,6 +56,7 @@ const useGameStore = create(
           status: 'playing',
           cells: {},
           usedQuestions: [],
+          usedLetterKeys: [],
           winnerData: null,
           currentTeam: 'teamA',
           teamAPlayerIndex: 0,
@@ -63,11 +65,15 @@ const useGameStore = create(
         });
       },
 
-      // تبديل الحرف عند الإجابة الخاطئة لضمان عدم التكرار
+      // تبديل الحرف عند الإجابة الخاطئة (يختار حرفاً لم يظهر ولم يُحل قبلاً)
       refreshCellLetter: (cellId) => {
-        const { usedQuestions, cellLetters } = get();
-        // تصفية الحروف التي لم تُستخدم أسئلتها بعد
-        const available = letterKeysBase.filter(l => !usedQuestions.includes(l));
+        const { usedLetterKeys, cellLetters } = get();
+        const currentLettersOnBoard = Object.values(cellLetters);
+        
+        // اختيار حرف ليس موجوداً الآن على الهرم ولم يتم الإجابة عليه بنجاح
+        const available = letterKeysBase.filter(l => 
+          !usedLetterKeys.includes(l) && !currentLettersOnBoard.includes(l)
+        );
         
         if (available.length > 0) {
           const newLetter = available[Math.floor(Math.random() * available.length)];
@@ -78,9 +84,14 @@ const useGameStore = create(
       },
 
       occupyCell: (cellId) => {
-        const { currentTeam, cells } = get();
+        const { currentTeam, cells, cellLetters, usedLetterKeys } = get();
+        const currentLetter = cellLetters[cellId];
         const newCells = { ...cells, [cellId]: currentTeam };
-        set({ cells: newCells });
+        
+        set({ 
+          cells: newCells,
+          usedLetterKeys: [...usedLetterKeys, currentLetter] // تسجيل الحرف كمستخدم بنجاح
+        });
         
         if (get().checkWin(newCells, currentTeam)) {
           const winner = currentTeam === 'teamA' ? get().teamA : get().teamB;
@@ -140,7 +151,7 @@ const useGameStore = create(
       }),
 
       resetGame: () => {
-        set({ status: 'setup', cells: {}, usedQuestions: [], winnerData: null, currentTeam: 'teamA', cellLetters: {} });
+        set({ status: 'setup', cells: {}, usedQuestions: [], usedLetterKeys: [], winnerData: null, currentTeam: 'teamA', cellLetters: {} });
         localStorage.removeItem('az-quiz-storage');
       }
     }),
