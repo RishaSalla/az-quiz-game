@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+// إضافة السطر المفقود الذي تسبب في انهيار الصفحة
+import { AnimatePresence } from 'framer-motion'; 
 import useGameStore from '../store/useGameStore';
 import logo from '../assets/logo.risha.png';
 
@@ -123,7 +125,7 @@ const PlayerSetup = () => {
               <h2 className="text-3xl font-black mb-8 text-[#d36a3e]">كيف تلعب تحدي الهرم؟</h2>
               <div className="space-y-6 text-lg font-bold leading-relaxed">
                 <p>• الهدف هو توصيل **أضلاع الهرم الثلاثة** (اليمين، اليسار، والقاعدة) ببعضها عبر طريق متصل من الخلايا.</p>
-                <p>• اختر رقماً، وسيظهر لك **حرف وسؤال عشوائيان**. الحروف لا ترتبط بالأرقام.</p>
+                <p>• اختر رقماً، وسيظهر لك **حرف وسؤال عشوائيان**. الحروف لا ترتبط بالأرقام ثابتاً لزيادة الإثارة.</p>
                 <p>• زر **تخطي** يعني خسارة المحاولة؛ ستعود الخلية لوضع الرقم وينتقل الدور للمنافس.</p>
                 <p>• المؤقت يبدأ فور ظهور السؤال؛ إذا انتهى الوقت ولم تُجب، تُعتبر المحاولة خاطئة.</p>
               </div>
