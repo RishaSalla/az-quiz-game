@@ -114,7 +114,14 @@ const PlayerSetup = () => {
         </div>
       </div>
 
-      <button onClick={handleStart} className="bg-[#d36a3e] text-white px-20 py-5 rounded-3xl text-2xl font-black border-b-8 border-[#3d2b1f] active:border-b-0 active:translate-y-2 transition-all">بدء التحدي</button>
+      {/* قسم البدء مع الجملة التوضيحية */}
+      <div className="flex flex-col items-center">
+        <button onClick={handleStart} className="bg-[#d36a3e] text-white px-20 py-5 rounded-3xl text-2xl font-black border-b-8 border-[#3d2b1f] active:border-b-0 active:translate-y-2 transition-all">بدء التحدي</button>
+        
+        <p className="mt-4 text-[10px] font-bold opacity-30 text-[#3d2b1f] tracking-widest uppercase">
+          هذه اللعبة هي نسخة مطورة ومستوحاة من البرنامج التشيكي الشهير (AZ-kvíz)
+        </p>
+      </div>
 
       {/* نافذة التعليمات المنبثقة */}
       <AnimatePresence>
@@ -123,11 +130,15 @@ const PlayerSetup = () => {
             <div className="bg-[#f5eedc] border-4 border-[#3d2b1f] p-10 rounded-[40px] max-w-2xl w-full shadow-2xl relative">
               <button onClick={() => setShowInstructions(false)} className="absolute top-6 left-6 text-2xl font-black text-red-600">إغلاق</button>
               <h2 className="text-3xl font-black mb-8 text-[#d36a3e]">كيف تلعب تحدي الهرم؟</h2>
-              <div className="space-y-6 text-lg font-bold leading-relaxed">
+              <div className="space-y-6 text-lg font-bold leading-relaxed text-right">
                 <p>• الهدف هو توصيل **أضلاع الهرم الثلاثة** (اليمين، اليسار، والقاعدة) ببعضها عبر طريق متصل من الخلايا.</p>
                 <p>• اختر رقماً، وسيظهر لك **حرف وسؤال عشوائيان**. الحروف لا ترتبط بالأرقام ثابتاً لزيادة الإثارة.</p>
                 <p>• زر **تخطي** يعني خسارة المحاولة؛ ستعود الخلية لوضع الرقم وينتقل الدور للمنافس.</p>
                 <p>• المؤقت يبدأ فور ظهور السؤال؛ إذا انتهى الوقت ولم تُجب، تُعتبر المحاولة خاطئة.</p>
+                
+                <div className="pt-6 border-t border-[#3d2b1f]/10 text-center">
+                  <p className="text-xs font-bold opacity-50">هذه اللعبة هي نسخة مطورة ومستوحاة من البرنامج التشيكي الشهير (AZ-kvíz)</p>
+                </div>
               </div>
             </div>
           </div>
