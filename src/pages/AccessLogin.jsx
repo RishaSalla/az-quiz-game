@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.risha.png';
-// استيراد مصفوفة الأكواد المشفرة من الملف الذي أنشأته
+// استيراد قاعدة البيانات بالأسلوب المعتاد لديك
 import { hashedCodes } from '../data/hashedCodes';
 
 const AccessLogin = () => {
   const [code, setCode] = useState('');
   const navigate = useNavigate();
 
-  // دالة تحويل الكود المدخل إلى بصمة مشفرة SHA-256
+  // محرك التشفير SHA-256
   const hashCode = async (text) => {
     const encoder = new TextEncoder();
     const data = encoder.encode(text);
@@ -21,19 +21,23 @@ const AccessLogin = () => {
     e.preventDefault();
     const inputCode = code.trim();
     
-    // 1. تحويل مدخلات المستخدم إلى هاش للمطابقة
+    // تحويل مدخلات العميل إلى هاش
     const userHash = await hashCode(inputCode);
 
-    // 2. التحقق: هل الهاش موجود في القائمة؟ أو هل استخدم كود الاختبار؟
-    const isValidHash = hashedCodes.valid_hashes.includes(userHash);
+    /**
+     * التحقق بأسلوبك الخاص:
+     * نبحث عن الهاش داخل مصفوفة valid_hashes الموجودة في ملف hashedCodes
+     */
+    const isValidHash = hashedCodes.valid_hashes && hashedCodes.valid_hashes.includes(userHash);
+    
+    // أكواد الاختبار السريعة
     const isTestCode = inputCode.toLowerCase() === 'risha' || inputCode === '2026';
 
     if (isValidHash || isTestCode) {
-      // حفظ تصريح الدخول في المتصفح
       localStorage.setItem('risha_access_authorized', 'true');
       navigate('/setup');
     } else {
-      alert('رمز الوصول غير صحيح أو مستخدم، يرجى المحاولة مرة أخرى');
+      alert('رمز الوصول غير صحيح، يرجى التأكد من الكود المكتوب في فاتورة سلة');
     }
   };
 
