@@ -10,6 +10,9 @@ const AccessLogin = () => {
     e.preventDefault();
     // رمز الوصول الافتراضي (يمكنك تغييره هنا مستقبلاً)
     if (code.toLowerCase() === 'risha' || code === '2026') {
+      // السطر السحري: كتابة تصريح الدخول في ذاكرة المتصفح ليتخطى هذه الصفحة مستقبلاً
+      localStorage.setItem('risha_access_authorized', 'true');
+      
       navigate('/setup');
     } else {
       alert('رمز الوصول غير صحيح، يرجى المحاولة مرة أخرى');
