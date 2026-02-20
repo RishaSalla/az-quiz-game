@@ -149,7 +149,7 @@ const GameArena = () => {
               {!showAnswer ? (
                 <div className="space-y-4">
                   <button onClick={() => { setShowAnswer(true); setIsTimerActive(false); }} className="w-full bg-[#d36a3e] text-white py-5 rounded-2xl font-black text-xl border-b-8 border-[#3d2b1f] active:border-b-0 active:translate-y-2 transition-all">إظهار الإجابة</button>
-                  <button onClick={handleSkip} className="w-full bg-[#3d2b1f]/10 py-4 rounded-2xl font-bold border-2 border-[#3d2b1f]/20">تخطي (حساب خطأ)</button>
+                  <button onClick={handleSkip} className="w-full bg-[#3d2b1f]/10 py-4 rounded-2xl font-bold border-2 border-[#3d2b1f]/20">تخطي </button>
                 </div>
               ) : (
                 <div className="space-y-6">
