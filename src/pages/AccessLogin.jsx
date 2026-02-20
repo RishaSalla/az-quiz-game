@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.risha.png';
-// استيراد قاعدة البيانات بالأسلوب المعتاد لديك
-import { hashedCodes } from '../data/hashedCodes';
+// التعديل: استيراد ملف الـ JSON بالأسلوب المعتاد والمباشر
+import hashedCodes from '../data/hashedCodes.json';
 
 const AccessLogin = () => {
   const [code, setCode] = useState('');
@@ -25,8 +25,8 @@ const AccessLogin = () => {
     const userHash = await hashCode(inputCode);
 
     /**
-     * التحقق بأسلوبك الخاص:
-     * نبحث عن الهاش داخل مصفوفة valid_hashes الموجودة في ملف hashedCodes
+     * التحقق بأسلوبك المعتاد:
+     * النظام يقرأ الآن مباشرة من ملف الـ JSON
      */
     const isValidHash = hashedCodes.valid_hashes && hashedCodes.valid_hashes.includes(userHash);
     
