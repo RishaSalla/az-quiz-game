@@ -25,7 +25,7 @@ const AccessLogin = () => {
     const userHash = await hashCode(inputCode);
 
     // 2. التحقق: هل الهاش موجود في القائمة؟ أو هل استخدم كود الاختبار؟
-    const isValidHash = hashedCodes.includes(userHash);
+    const isValidHash = hashedCodes.valid_hashes.includes(userHash);
     const isTestCode = inputCode.toLowerCase() === 'risha' || inputCode === '2026';
 
     if (isValidHash || isTestCode) {
