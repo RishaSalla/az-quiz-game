@@ -12,8 +12,10 @@
 
 @layer base {
   html, body {
-    /* تعديل: السماح بالتمرير العمودي الذكي ومنع الأفقي لضمان استقرار العناصر الجانبية */
-    @apply h-full overflow-x-hidden overflow-y-auto; 
+    /* السماح بالتمرير العمودي دائماً ومنع الأفقي لضمان استقرار العناصر */
+    height: auto !important;
+    min-height: 100%;
+    @apply overflow-x-hidden overflow-y-auto; 
     scroll-behavior: smooth;
   }
 
@@ -21,30 +23,28 @@
     background-color: var(--risha-sand);
     color: var(--risha-dark);
     font-family: 'Tajawal', sans-serif;
-    -webkit-font-smoothing: antialiased;
     background-image: url("https://www.transparenttextures.com/patterns/sandpaper.png");
   }
 }
 
 @layer components {
-  /* الزر الجانبي المطور: ثابت في أقصى اليمين */
+  /* زر القوانين: ثابت في اليمين بشكل أنيق */
   .rules-side-button {
-    @apply fixed right-0 top-1/2 -translate-y-1/2 z-50 flex items-center justify-center transition-all duration-300 cursor-pointer select-none;
+    @apply fixed right-0 top-1/2 -translate-y-1/2 z-50 flex items-center justify-center transition-all duration-300;
     writing-mode: vertical-rl;
-    text-orientation: mixed;
-    padding: 1.2rem 0.5rem;
+    padding: 1rem 0.4rem;
     background-color: var(--risha-dark);
     color: white;
     font-weight: 900;
-    border-radius: 20px 0 0 20px;
-    box-shadow: -4px 0 15px rgba(0,0,0,0.2);
-    font-size: 0.9rem;
+    border-radius: 15px 0 0 15px;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+    font-size: 0.8rem;
   }
 
   @media (max-width: 640px) {
     .rules-side-button {
-      padding: 0.8rem 0.4rem;
-      font-size: 0.75rem;
+      padding: 0.7rem 0.3rem;
+      font-size: 0.7rem;
     }
   }
 
@@ -62,49 +62,47 @@
 }
 
 @layer utilities {
-  /* الاستجابة الذكية: حاوية مرنة تتقلص حسب ارتفاع الشاشة */
+  /* الحاوية الرئيسية: ترتيب عمودي بسيط وواضح يبدأ من الأعلى */
   .smart-scaling-container {
-    @apply min-h-screen w-full flex flex-col items-center justify-center p-4 transition-all duration-300;
+    @apply min-h-screen w-full flex flex-col items-center justify-start p-6 py-12 transition-all duration-300;
+    /* إضافة مساحة أمان من اليمين لعدم التداخل مع زر القوانين في الجوال */
+    padding-right: 3rem; 
   }
 
-  /* تصغير المسافات في وضع العرض الجانبي (Landscape) للجوال */
+  /* تحجيم الشعار ليكون منضبطاً في كل الشاشات */
+  .risha-logo-setup {
+    @apply w-auto mb-6 drop-shadow-lg;
+    max-height: 100px; /* الحد الأقصى للارتفاع لضمان عدم تضخمه */
+  }
+
+  @media (min-width: 1024px) {
+    .risha-logo-setup {
+      max-height: 140px; /* حجم أكبر قليلاً للابتوب */
+    }
+    .smart-scaling-container {
+      padding-right: 1.5rem; /* تقليل الهامش في الشاشات الواسعة */
+    }
+  }
+
+  /* وضع الجوال العرضي: نكتفي بتقليل المسافات العمودية فقط دون تغيير الترتيب */
   @media (max-height: 500px) and (orientation: landscape) {
     .smart-scaling-container {
-      @apply p-2 space-y-2 flex-row gap-4;
-    }
-    .pixel-card {
-      @apply p-4 scale-90;
+      @apply p-4 py-8;
     }
     .risha-logo-setup {
-      @apply h-16 w-auto mb-0; /* تصغير الشعار لتوفير مساحة */
-    }
-  }
-
-  /* تصغير المكونات في الشاشات القصيرة (جوالات صغيرة) */
-  @media (max-height: 750px) {
-    .risha-logo-setup {
-      @apply h-20 w-auto mb-4;
-    }
-    .setup-card-spacing {
-      @apply p-6 space-y-4;
+      max-height: 60px;
     }
   }
 
   .clip-hexagon {
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   }
-
-  .hex-active {
-    filter: drop-shadow(0 0 15px var(--risha-orange));
-    z-index: 30;
-  }
 }
 
-/* تخصيص شريط التمرير ليناسب هوية ريشة */
+/* تخصيص شريط التمرير */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--risha-sand); }
 ::-webkit-scrollbar-thumb { 
   background: var(--risha-dark); 
   border-radius: 10px;
-  border: 2px solid var(--risha-sand);
 }
