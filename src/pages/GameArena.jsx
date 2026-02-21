@@ -11,7 +11,7 @@ const GameArena = () => {
     teamA, teamB, currentTeam, 
     gameMode, timerSetting, status, winnerData, cells, usedQuestions,
     cellLetters, refreshCellLetter, 
-    occupateCell, nextTurn, resetGame, markQuestionAsUsed,
+    occupyCell, nextTurn, resetGame, markQuestionAsUsed,
     setGameSetup 
   } = useGameStore();
 
