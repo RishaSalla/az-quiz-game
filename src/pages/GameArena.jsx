@@ -91,7 +91,7 @@ const GameArena = () => {
   const handleCorrect = () => {
     setIsTimerActive(false);
     markQuestionAsUsed(currentQuestion.question);
-    occupateCell(selectedCell.id);
+    occupyCell(selectedCell.id);
     nextTurn();
     setSelectedCell(null);
   };
