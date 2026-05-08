@@ -21,6 +21,7 @@ const GameArena = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false); // حالة نافذة الخروج الجديدة
   const [isShaking, setIsShaking] = useState(false);
 
   const letterKeys = [
@@ -108,6 +109,15 @@ const GameArena = () => {
   return (
     <div className="smart-scaling-container font-tajawal text-[#3d2b1f] relative">
       
+      {/* زر الخروج الجديد */}
+      <button 
+        onClick={() => setShowExitConfirm(true)}
+        className="absolute top-4 left-4 md:top-6 md:left-6 z-40 bg-white/60 hover:bg-red-100 text-red-600 font-bold px-4 py-2 rounded-xl border-2 border-red-200 transition-all text-sm shadow-sm"
+      >
+        خروج ✖
+      </button>
+
+      {/* زر القوانين */}
       <button 
         onClick={() => setShowInstructions(true)} 
         className="rules-side-button"
@@ -115,8 +125,8 @@ const GameArena = () => {
         قوانين التحدي
       </button>
 
-      {/* الهيدر: ترتيب عمودي بسيط في الجوال لمنع تداخل الأسماء */}
-      <div className="w-full max-w-5xl flex flex-col md:flex-row justify-between items-center gap-4 mb-8 px-6 py-4 bg-white/40 rounded-3xl border-2 border-[#3d2b1f]/10 backdrop-blur-sm shadow-sm">
+      {/* الهيدر */}
+      <div className="w-full max-w-5xl flex flex-col md:flex-row justify-between items-center gap-4 mb-8 px-6 py-4 bg-white/40 rounded-3xl border-2 border-[#3d2b1f]/10 backdrop-blur-sm shadow-sm mt-4 md:mt-0">
         <div className={`p-4 rounded-2xl w-full md:w-auto text-center transition-all duration-500 ${currentTeam === 'teamA' ? 'bg-[#d36a3e] text-white shadow-xl' : 'opacity-20'}`}>
           <div className="text-[10px] font-black uppercase tracking-widest mb-1">الطرف البرتقالي</div>
           <div className="text-lg font-black">{currentTeam === 'teamA' ? 'دور: ' : ''}{teamA.name}</div>
@@ -131,10 +141,11 @@ const GameArena = () => {
       </div>
 
       {/* منطقة الهرم */}
-      <div className="flex-1 flex items-center justify-center w-full max-w-4xl mx-auto py-10">
+      <div className="flex-1 flex items-center justify-center w-full max-w-4xl mx-auto py-10 pyramid-scale">
         <PyramidGrid onCellClick={handleCellClick} />
       </div>
 
+      {/* نافذة السؤال */}
       <AnimatePresence>
         {selectedCell && currentQuestion && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#3d2b1f]/90 backdrop-blur-md">
@@ -170,10 +181,31 @@ const GameArena = () => {
         )}
       </AnimatePresence>
 
+      {/* نافذة الفوز مع الهرم المصغر */}
       <AnimatePresence>
         {status === 'winner' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-[#d36a3e] p-6 text-center">
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="bg-[#f5eedc] p-10 rounded-[50px] border-8 border-[#3d2b1f] shadow-2xl max-w-2xl w-full">
+              
+              {/* الهرم المصغر لمسار الفوز */}
+              <div className="flex flex-col items-center gap-1 md:gap-1.5 mb-6 md:mb-8 opacity-90">
+                {pyramidRows.map((row, rIdx) => (
+                  <div key={rIdx} className="flex gap-1 md:gap-1.5">
+                    {row.map(cellId => {
+                      const isTeamA = cells[cellId] === 'teamA';
+                      const isTeamB = cells[cellId] === 'teamB';
+                      const bgColor = isTeamA ? 'bg-[#d36a3e]' : (isTeamB ? 'bg-[#3d2b1f]' : 'bg-white/40');
+                      return (
+                        <div
+                          key={cellId}
+                          className={`w-2.5 h-2.5 md:w-3.5 md:h-3.5 rounded-sm rotate-45 border border-[#3d2b1f]/10 shadow-sm ${bgColor}`}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+
               <h1 className="text-5xl font-black text-[#3d2b1f] mb-4 uppercase tracking-tighter">مبروك!</h1>
               <div className="text-4xl font-black text-[#d36a3e] mb-8 leading-tight">{winnerData.name}</div>
               <div className="flex flex-col gap-3 mt-8">
@@ -185,6 +217,7 @@ const GameArena = () => {
         )}
       </AnimatePresence>
 
+      {/* نافذة القوانين */}
       <AnimatePresence>
         {showInstructions && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#3d2b1f]/90 backdrop-blur-sm">
@@ -203,6 +236,23 @@ const GameArena = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* نافذة تأكيد الخروج */}
+      <AnimatePresence>
+        {showExitConfirm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#3d2b1f]/90 backdrop-blur-sm">
+            <div className="bg-[#f5eedc] border-4 border-[#3d2b1f] p-8 md:p-10 rounded-[40px] max-w-md w-full relative shadow-2xl text-center">
+              <h2 className="text-2xl font-black mb-4 text-red-600">إنهاء التحدي؟</h2>
+              <p className="font-bold text-lg mb-8 opacity-80">هل أنت متأكد من رغبتك في الخروج؟ سيتم إلغاء التحدي الحالي بالكامل.</p>
+              <div className="flex gap-4">
+                <button onClick={handleMainMenu} className="flex-1 bg-red-600 text-white py-4 rounded-2xl font-black border-b-8 border-red-800 active:border-b-0 active:translate-y-2 transition-all">نعم، خروج</button>
+                <button onClick={() => setShowExitConfirm(false)} className="flex-1 bg-[#3d2b1f] text-white py-4 rounded-2xl font-black border-b-8 border-black active:border-b-0 active:translate-y-2 transition-all">تراجع</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };
