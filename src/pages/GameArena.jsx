@@ -156,7 +156,7 @@ const GameArena = () => {
           {/* مؤشر "يستعد" يظهر فقط عندما لا يكون دور الفريق وفي وضع الفرق */}
           {currentTeam !== 'teamA' && getNextPlayerName(teamA, teamAPlayerIndex) && (
             <div className="text-xs font-bold opacity-60">
-              يستعد: {getActivePlayerName(teamA, teamAPlayerIndex)}
+              استعد: {getActivePlayerName(teamA, teamAPlayerIndex)}
             </div>
           )}
         </div>
