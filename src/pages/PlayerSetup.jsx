@@ -120,7 +120,7 @@ const PlayerSetup = () => {
           بدء التحدي
         </button>
         <p className="mt-6 text-[10px] font-bold opacity-30 text-[#3d2b1f] tracking-widest uppercase text-center max-w-xs">
-          هذه اللعبة هي نسخة مطورة ومستوحاة من البرنامج التشيكي الشهير (AZ-kvíz)
+          هذه اللعبة هي نسخة مطورة باللغة العربية ومستوحاة من البرنامج التشيكي الشهير (AZ-kvíz)
         </p>
       </div>
 
