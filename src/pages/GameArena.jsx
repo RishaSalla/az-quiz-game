@@ -12,7 +12,8 @@ const GameArena = () => {
     gameMode, timerSetting, status, winnerData, cells, usedQuestions,
     cellLetters, refreshCellLetter, 
     occupyCell, nextTurn, resetGame, markQuestionAsUsed,
-    setGameSetup 
+    setGameSetup,
+    teamAPlayerIndex, teamBPlayerIndex // جلب عدادات اللاعبين من المخزن
   } = useGameStore();
 
   const [selectedCell, setSelectedCell] = useState(null);
@@ -21,7 +22,7 @@ const GameArena = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
-  const [showExitConfirm, setShowExitConfirm] = useState(false); // حالة نافذة الخروج الجديدة
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
 
   const letterKeys = [
@@ -106,6 +107,23 @@ const GameArena = () => {
     navigate('/');
   };
 
+  // دوال مساعدة لاستخراج أسماء اللاعبين وتحديد من عليه الدور ومن يستعد
+  const getActivePlayerName = (teamObj, index) => {
+    if (gameMode === 'single') return teamObj.name;
+    if (teamObj.players && teamObj.players.length > 0) {
+      return teamObj.players[index % teamObj.players.length];
+    }
+    return teamObj.name;
+  };
+
+  const getNextPlayerName = (teamObj, index) => {
+    if (gameMode === 'single') return null; // لا يوجد "يستعد" في الفردي
+    if (teamObj.players && teamObj.players.length > 1) {
+      return teamObj.players[(index + 1) % teamObj.players.length];
+    }
+    return null;
+  };
+
   return (
     <div className="smart-scaling-container font-tajawal text-[#3d2b1f] relative">
       
@@ -125,18 +143,39 @@ const GameArena = () => {
         قوانين التحدي
       </button>
 
-      {/* الهيدر */}
+      {/* الهيدر المطور الذي يظهر أسماء اللاعبين بالتناوب */}
       <div className="w-full max-w-5xl flex flex-col md:flex-row justify-between items-center gap-4 mb-8 px-6 py-4 bg-white/40 rounded-3xl border-2 border-[#3d2b1f]/10 backdrop-blur-sm shadow-sm mt-4 md:mt-0">
-        <div className={`p-4 rounded-2xl w-full md:w-auto text-center transition-all duration-500 ${currentTeam === 'teamA' ? 'bg-[#d36a3e] text-white shadow-xl' : 'opacity-20'}`}>
+        
+        {/* بطاقة الطرف البرتقالي */}
+        <div className={`p-4 rounded-2xl w-full md:w-48 text-center transition-all duration-500 ${currentTeam === 'teamA' ? 'bg-[#d36a3e] text-white shadow-xl scale-105' : 'opacity-40'}`}>
           <div className="text-[10px] font-black uppercase tracking-widest mb-1">الطرف البرتقالي</div>
-          <div className="text-lg font-black">{currentTeam === 'teamA' ? 'دور: ' : ''}{teamA.name}</div>
+          <div className="text-xl font-black mb-1">
+            {currentTeam === 'teamA' ? 'دور: ' : ''}
+            {getActivePlayerName(teamA, teamAPlayerIndex)}
+          </div>
+          {/* مؤشر "يستعد" يظهر فقط عندما لا يكون دور الفريق وفي وضع الفرق */}
+          {currentTeam !== 'teamA' && getNextPlayerName(teamA, teamAPlayerIndex) && (
+            <div className="text-xs font-bold opacity-60">
+              يستعد: {getActivePlayerName(teamA, teamAPlayerIndex)}
+            </div>
+          )}
         </div>
 
         <img src={logo} alt="Risha" className="h-10 md:h-14" />
 
-        <div className={`p-4 rounded-2xl w-full md:w-auto text-center transition-all duration-500 ${currentTeam === 'teamB' ? 'bg-[#3d2b1f] text-white shadow-xl' : 'opacity-20'}`}>
-          <div className="text-[10px] font-black uppercase tracking-widest mb-1 text-right">الطرف البني</div>
-          <div className="text-lg font-black">{currentTeam === 'teamB' ? 'دور: ' : ''}{teamB.name}</div>
+        {/* بطاقة الطرف البني */}
+        <div className={`p-4 rounded-2xl w-full md:w-48 text-center transition-all duration-500 ${currentTeam === 'teamB' ? 'bg-[#3d2b1f] text-white shadow-xl scale-105' : 'opacity-40'}`}>
+          <div className="text-[10px] font-black uppercase tracking-widest mb-1 text-center">الطرف البني</div>
+          <div className="text-xl font-black mb-1">
+            {currentTeam === 'teamB' ? 'دور: ' : ''}
+            {getActivePlayerName(teamB, teamBPlayerIndex)}
+          </div>
+          {/* مؤشر "يستعد" */}
+          {currentTeam !== 'teamB' && getNextPlayerName(teamB, teamBPlayerIndex) && (
+            <div className="text-xs font-bold opacity-60">
+              يستعد: {getActivePlayerName(teamB, teamBPlayerIndex)}
+            </div>
+          )}
         </div>
       </div>
 
@@ -181,7 +220,7 @@ const GameArena = () => {
         )}
       </AnimatePresence>
 
-      {/* نافذة الفوز مع الهرم المصغر */}
+      {/* نافذة الفوز المطورة بلوحة الشرف */}
       <AnimatePresence>
         {status === 'winner' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-[#d36a3e] p-6 text-center">
@@ -207,8 +246,23 @@ const GameArena = () => {
               </div>
 
               <h1 className="text-5xl font-black text-[#3d2b1f] mb-4 uppercase tracking-tighter">مبروك!</h1>
-              <div className="text-4xl font-black text-[#d36a3e] mb-8 leading-tight">{winnerData.name}</div>
-              <div className="flex flex-col gap-3 mt-8">
+              
+              {/* عرض اسم الطرف كفائز رئيسي */}
+              <div className="text-4xl font-black text-[#d36a3e] mb-4 leading-tight">
+                {winnerData.name}
+              </div>
+
+              {/* لوحة الشرف: عرض أسماء الأعضاء إذا كان اللعب بنظام الفرق */}
+              {gameMode === 'team' && winnerData.players && winnerData.players.length > 0 && (
+                <div className="bg-white/50 p-4 rounded-2xl border-2 border-[#3d2b1f]/10 mb-8 inline-block min-w-[200px]">
+                  <span className="text-xs font-bold opacity-60 uppercase block mb-2">أبطال التحدي</span>
+                  <div className="text-lg font-black text-[#3d2b1f]">
+                    {winnerData.players.join(' - ')}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-3 mt-4">
                 <button onClick={handleRematch} className="bg-[#3d2b1f] text-white px-12 py-5 rounded-3xl font-black text-xl border-b-8 border-black active:border-0 active:translate-y-1 transition-all">تحدي جديد (نفس الأسماء)</button>
                 <button onClick={handleMainMenu} className="text-[#3d2b1f] font-black text-sm opacity-60 hover:opacity-100 transition-opacity">العودة للقائمة الرئيسية</button>
               </div>
