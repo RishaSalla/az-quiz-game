@@ -16,8 +16,8 @@ const useGameStore = create(
       gameMode: 'single',
       timerSetting: 'off',
       currentTeam: 'teamA',
-      teamAPlayerIndex: 0,
-      teamBPlayerIndex: 0,
+      teamAPlayerIndex: 0,  // عداد لاعبي الفريق البرتقالي
+      teamBPlayerIndex: 0,  // عداد لاعبي الفريق البني
       cells: {}, 
       status: 'setup',
       winnerData: null,
@@ -39,8 +39,8 @@ const useGameStore = create(
           usedLetterKeys: [], // تصفير الحروف المستخدمة في الجولة الجديدة فقط
           winnerData: null,
           currentTeam: 'teamA',
-          teamAPlayerIndex: 0,
-          teamBPlayerIndex: 0,
+          teamAPlayerIndex: 0, // تصفير العداد عند بدء تحدي جديد
+          teamBPlayerIndex: 0, // تصفير العداد عند بدء تحدي جديد
           cellLetters: initialCellLetters
         });
       },
@@ -119,17 +119,37 @@ const useGameStore = create(
       nextTurn: () => set((state) => {
         const isTeamA = state.currentTeam === 'teamA';
         const nextTeam = isTeamA ? 'teamB' : 'teamA';
+        
         let nextAIdx = state.teamAPlayerIndex;
         let nextBIdx = state.teamBPlayerIndex;
+        
+        // تعديل: زيادة عداد الفريق الذي أنهى دوره للتو فقط، بشكل دائري
         if (state.gameMode === 'team') {
-          if (isTeamA) nextAIdx = (state.teamAPlayerIndex + 1) % state.teamA.players.length;
-          else nextBIdx = (state.teamBPlayerIndex + 1) % state.teamB.players.length;
+          if (isTeamA) {
+            nextAIdx = (state.teamAPlayerIndex + 1) % Math.max(1, state.teamA.players.length);
+          } else {
+            nextBIdx = (state.teamBPlayerIndex + 1) % Math.max(1, state.teamB.players.length);
+          }
         }
-        return { currentTeam: nextTeam, teamAPlayerIndex: nextAIdx, teamBPlayerIndex: nextBIdx };
+        
+        return { 
+          currentTeam: nextTeam, 
+          teamAPlayerIndex: nextAIdx, 
+          teamBPlayerIndex: nextBIdx 
+        };
       }),
 
       resetGame: () => {
-        set({ status: 'setup', cells: {}, winnerData: null, currentTeam: 'teamA', cellLetters: {}, usedLetterKeys: [] });
+        set({ 
+          status: 'setup', 
+          cells: {}, 
+          winnerData: null, 
+          currentTeam: 'teamA', 
+          cellLetters: {}, 
+          usedLetterKeys: [],
+          teamAPlayerIndex: 0,
+          teamBPlayerIndex: 0
+        });
       }
     }),
     {
