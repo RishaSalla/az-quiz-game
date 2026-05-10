@@ -170,10 +170,10 @@ const GameArena = () => {
             {currentTeam === 'teamB' ? 'دور: ' : ''}
             {getActivePlayerName(teamB, teamBPlayerIndex)}
           </div>
-          {/* مؤشر "يستعد" */}
+          {/* مؤشر "استعد" */}
           {currentTeam !== 'teamB' && getNextPlayerName(teamB, teamBPlayerIndex) && (
             <div className="text-xs font-bold opacity-60">
-              يستعد: {getActivePlayerName(teamB, teamBPlayerIndex)}
+              استعد: {getActivePlayerName(teamB, teamBPlayerIndex)}
             </div>
           )}
         </div>
